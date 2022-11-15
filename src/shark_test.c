@@ -158,7 +158,8 @@ int main(int argc, char **argv) {
   // S21:
   // ----
   char delims[1024] = ",:;";
-  char temp[1024] = "aboba,abiba,bobka,popa,,,,::;;;;aboba;abiba";
+  char temp[1024] =
+      ",,,::;;;aboba,abiba;bobka:popa,,,,::;;;;aboba;abiba,,,::;;;";
   printf("с:[%s]\n", s21_strtok(temp, delims));
   for (int i = 0; i < 40; i++) {
     printf("с:[%s]\n", s21_strtok(NULL, delims));
