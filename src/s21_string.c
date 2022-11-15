@@ -1,4 +1,5 @@
 #include "s21_string.h"
+#include "s21_strerror_codes.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -280,27 +281,26 @@ char *s21_strpbrk(const char *str, const char *sym) {
   if (check == s21_strlen(str)) {
     temp = NULL;
   } else {
-    temp = (char*)str + check;
+    temp = (char *)str + check;
   }
   return temp;
 }
 
-
-
 char *s21_strerror(int errcode) {
   char *error = NULL;
-  if (errcode >=0 && errcode <= 106) {
+  if (errcode >= 0 && errcode <= 106) {
     error = ErrorNames[errcode];
   } else {
     char num_error[20];
     sprintf(num_error, "%d", errcode); // поменять на свой
-    char unknown[50] = "Unknown error: "; 
+    char unknown[50] = "Unknown error: ";
     s21_strcat(unknown, num_error);
     error = unknown;
   }
   return error;
 }
-// char *s21_strcpy(char *dest, const char *src) { // karnhor
+
+// char *s21_strcpy(char *dest, const char *src) { // kerenhor
 //   char *tmp = dest;
 //   while (*src != '\0') {
 //     tmp = (char *)src;
@@ -314,7 +314,7 @@ char *s21_strerror(int errcode) {
 //   return tmp;
 // }
 
-// char *s21_strcat(char *str1, const char *str2) { // karnhor
+// char *s21_strcat(char *str1, const char *str2) { // kerenhor
 //   char *tmp1 = str1;
 //   const char *tmp2 = str2;
 //   while (*tmp1 != '\0') {
@@ -332,7 +332,7 @@ char *s21_strerror(int errcode) {
 //   return tmp1;
 // }
 
-// char *s21_strncat(char *str1, const char *str2, size_t n) { // karnhor
+// char *s21_strncat(char *str1, const char *str2, size_t n) { // kerenhor
 //   char *tmp1 = str1;
 //   const char *tmp2 = str2;
 //   while (*tmp1 != '\0') {
