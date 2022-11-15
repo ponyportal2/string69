@@ -149,7 +149,7 @@ size_t s21_strspn_helper(const char *stringOne, const char *stringTwo,
   if (s21_strlen(stringTwo) == 0) {
     returnValue = s21_strlen(stringOne);
   } else {
-    while (stringTwo[i] != '\0' && whileBreak != true) {
+    while (stringOne[i] != '\0' && whileBreak != true) {
       if (s21_match(stringTwo, stringOne[i]) == isCspn) {
         whileBreak = true;
         returnValue = i;
@@ -263,7 +263,7 @@ char *s21_strtok(char *str, const char *delim) {
     check = 0;
   }
   if (check != 0) {
-    int check1 = s21_strspn(new_str, delim); // есть ли сейчас разделитель
+    int check1 = strspn(new_str, delim); // есть ли сейчас разделитель
     str = new_str + check1; // перепрыгиваем разделитель
     tmp = new_str + check1;
     int check2 = strcspn(str, delim); // длина до следующего разделителя

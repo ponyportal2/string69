@@ -106,11 +106,11 @@ int main(int argc, char **argv) {
 
   // char temp5[1024] = "12345";
   // char temp6[1024] = "";
-  // printf("s21:[%li]\n", s21_strcspn(temp5, temp6));
+  // printf("s21:[%li]\n", s21_strspn(temp5, temp6));
   // printf("c:[%li]\n", strcspn(temp5, temp6));
-  // printf("s21:[%li]\n", s21_strcspn(temp6, temp5));
-  // printf("c:[%li]\n", strcspn(temp6, temp5));
-  // // -----------
+  // printf("s21:[%li]\n", s21_strspn(temp6, temp5));
+  // printf("c:[%li]\n", strspn(temp6, temp5));
+  // -----------
   // S21_STRRCHR
   // -----------
   // for (int i = 0; i < argc; i++) {
@@ -135,6 +135,8 @@ int main(int argc, char **argv) {
   // char temp2[1024] = "56789";
   // char temp3[1024] = "156789";
   // char temp4[1024] = "56789";
+  // char temp5[1024] = "12345";
+  // char temp6[1024] = "";
 
   // printf("s21:[%li]\n", s21_strcspn(temp2, temp1));
   // printf("c:[%li]\n", strcspn(temp2, temp1));
@@ -145,8 +147,6 @@ int main(int argc, char **argv) {
   // printf("s21:[%li]\n", s21_strcspn(temp4, temp3));
   // printf("c:[%li]\n\n", strcspn(temp4, temp3));
 
-  // char temp5[1024] = "12345";
-  // char temp6[1024] = "";
   // printf("s21:[%li]\n", s21_strcspn(temp5, temp6));
   // printf("c:[%li]\n", strcspn(temp5, temp6));
   // printf("s21:[%li]\n", s21_strcspn(temp6, temp5));
@@ -161,7 +161,7 @@ int main(int argc, char **argv) {
   char temp[1024] =
       ",,,::;;;aboba,abiba;bobka:popa,,,,::;;;;aboba;abiba,,,::;;;";
   printf("с:[%s]\n", s21_strtok(temp, delims));
-  for (int i = 0; i < 40; i++) {
+  for (int i = 0; i < 20; i++) {
     printf("с:[%s]\n", s21_strtok(NULL, delims));
   }
 
