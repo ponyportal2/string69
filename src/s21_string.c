@@ -1,4 +1,6 @@
 #include "s21_string.h"
+#include <stdio.h>
+#include <string.h>
 
 size_t s21_strlen(const char *str) {
   size_t len = 0;
@@ -245,6 +247,59 @@ char *s21_strcat_helper(char *dest, const char *src, size_t n, bool isNcat) {
   return (char *)dest;
 }
 
+char *s21_strtok(char *str, const char *delim) {
+  static char *new_str;
+  int check = 1;
+  if (str != NULL) {
+    new_str = str;
+  } else if (!new_str) { //если строка закончилась, возвращаем 0
+    str = 0;
+    check = 0;
+  }
+  if (check != 0) {
+    int check1 = s21_strspn(new_str, delim); // есть ли сейчас разделитель
+    str = new_str + check1; // перепрыгиваем разделитель
+    int check2 = strcspn(str, delim); // длина до следующего разделителя
+    new_str = str + check2; // перепрыгиваем до следующего разделителя
+    if (new_str == str) { // для случая когда стартовая строка пустая
+      str = 0;
+    }
+    if (*new_str != 0) { // зануляем разделитель
+      *new_str = 0;
+      new_str++;
+    } else {
+      new_str = NULL; // если строка закончилась то NULL
+    }
+  }
+  return str; // возвращаем строку до зануленного разделителя
+}
+
+char *s21_strpbrk(const char *str, const char *sym) {
+  char *temp;
+  size_t check = strcspn(str, sym);
+  if (check == s21_strlen(str)) {
+    temp = NULL;
+  } else {
+    temp = (char*)str + check;
+  }
+  return temp;
+}
+
+
+
+char *s21_strerror(int errcode) {
+  char *error = NULL;
+  if (errcode >=0 && errcode <= 106) {
+    error = ErrorNames[errcode];
+  } else {
+    char num_error[20];
+    snprintf(num_error, 20, "%d", errcode);
+    char unknown[50] = "Unknown error: ";
+    s21_strcat(unknown, num_error);
+    error = unknown;
+  }
+  return error;
+}
 // char *s21_strcpy(char *dest, const char *src) { // karnhor
 //   char *tmp = dest;
 //   while (*src != '\0') {

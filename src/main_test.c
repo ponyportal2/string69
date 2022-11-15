@@ -73,5 +73,34 @@ int main() {
 
   // Вывод массива dst на консоль
   printf("dst: %s %s\n", dst1, &dst1[14]);
-  return 0;
+
+  char test[20] = "asd/.fgh/hjk";
+  char test1[5] = "/.";
+  char *ptch;
+   
+  ptch = strtok(test, test1);
+  
+  while (ptch!=NULL) {
+    printf("%s %s\n", ptch, test);
+    ptch = strtok(NULL, test1);
+  
+  }
+
+  char test2[20] = "asd/.fgh/hjk";
+  char test12[5] = "/.";
+  char *ptch1;
+  ptch1 = s21_strtok(test2, test12);
+  
+  while (ptch1!=NULL) {
+    printf("%s %s\n", ptch1, test2);
+    ptch1 = s21_strtok(NULL, test1);
+  
+  }
+char test22[20] = "asd/.fgh/hjk";
+char test122[5] = "./";
+printf("%s\n", s21_strpbrk(test22, test122));
+printf("%s\n", strpbrk(test22, test122));
+
+printf("%s\n", strerror(11));
+printf("%s\n", s21_strerror(11));
 }
