@@ -145,44 +145,45 @@ int main(int argc, char **argv) {
   // printf("s21:[%li]\n", s21_strcspn(temp4, temp3));
   // printf("c:[%li]\n\n", strcspn(temp4, temp3));
 
-  char temp5[1024] = "12345";
-  char temp6[1024] = "";
-  printf("s21:[%li]\n", s21_strcspn(temp5, temp6));
-  printf("c:[%li]\n", strcspn(temp5, temp6));
-  printf("s21:[%li]\n", s21_strcspn(temp6, temp5));
-  printf("c:[%li]\n", strcspn(temp6, temp5));
+  // char temp5[1024] = "12345";
+  // char temp6[1024] = "";
+  // printf("s21:[%li]\n", s21_strcspn(temp5, temp6));
+  // printf("c:[%li]\n", strcspn(temp5, temp6));
+  // printf("s21:[%li]\n", s21_strcspn(temp6, temp5));
+  // printf("c:[%li]\n", strcspn(temp6, temp5));
   // ----------
   // S21_STRTOK
   // ----------
-  // не смог сделать нормально
+
   // S21:
   // ----
-  // char delims[1024] = ",:;";
-  // char temp[1024] = "aboba,abiba,bobka,popa,,,,::;;;;aboba;abiba";
-  // printf("с:[%s]\n", s21_strtok(temp, delims));
-  // for (int i = 0; i < 40; i++) {
-  //   printf("с:[%s]\n", s21_strtok(NULL, delims));
-  // }
+  char delims[1024] = ",:;";
+  char temp[1024] = "aboba,abiba,bobka,popa,,,,::;;;;aboba;abiba";
+  printf("с:[%s]\n", s21_strtok(temp, delims));
+  for (int i = 0; i < 40; i++) {
+    printf("с:[%s]\n", s21_strtok(NULL, delims));
+  }
 
-  // char temp2[1024] = ",";
-  // printf("с:[%s]\n", s21_strtok(temp2, delims));
-  // for (int i = 0; i < 4; i++) {
-  //   printf("с:[%s]\n", s21_strtok(NULL, delims));
-  // }
+  char temp2[1024] = ",";
+  printf("с:[%s]\n", s21_strtok(temp2, delims));
+  for (int i = 0; i < 4; i++) {
+    printf("с:[%s]\n", s21_strtok(NULL, delims));
+  }
 
-  // char temp3[1024] = ",,";
-  // printf("с:[%s]\n", s21_strtok(temp3, delims));
-  // for (int i = 0; i < 4; i++) {
-  //   printf("с:[%s]\n", s21_strtok(NULL, delims));
-  // }
+  char temp3[1024] = ",,";
+  printf("с:[%s]\n", s21_strtok(temp3, delims));
+  for (int i = 0; i < 4; i++) {
+    printf("с:[%s]\n", s21_strtok(NULL, delims));
+  }
 
-  // char temp4[1024] = ",a,";
-  // printf("с:[%s]\n", s21_strtok(temp4, delims));
-  // for (int i = 0; i < 4; i++) {
-  //   printf("с:[%s]\n", s21_strtok(NULL, delims));
-  // }
+  char temp4[1024] = ",a,";
+  printf("с:[%s]\n", s21_strtok(temp4, delims));
+  for (int i = 0; i < 4; i++) {
+    printf("с:[%s]\n", s21_strtok(NULL, delims));
+  }
 
   // C:
+  // --
   // char delims[1024] = ",:;";
   // char temp[1024] = "aboba,abiba,bobka,popa,,,,::;;;;aboba;abiba";
   // printf("с:[%s]\n", strtok(temp, delims));
