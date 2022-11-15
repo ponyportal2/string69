@@ -146,12 +146,16 @@ size_t s21_strspn_helper(const char *stringOne, const char *stringTwo,
   int i = 0;
   int returnValue = 0;
   bool whileBreak = false;
-  while (stringTwo[i] != '\0' && whileBreak != true) {
-    if (s21_match(stringTwo, stringOne[i]) == isCspn) {
-      whileBreak = true;
-      returnValue = i;
+  if (s21_strlen(stringTwo) == 0) {
+    returnValue = s21_strlen(stringOne);
+  } else {
+    while (stringTwo[i] != '\0' && whileBreak != true) {
+      if (s21_match(stringTwo, stringOne[i]) == isCspn) {
+        whileBreak = true;
+        returnValue = i;
+      }
+      i++;
     }
-    i++;
   }
   return (size_t)returnValue;
 }
@@ -261,7 +265,7 @@ char *s21_strtok(char *str, const char *delim) {
   if (check != 0) {
     int check1 = s21_strspn(new_str, delim); // есть ли сейчас разделитель
     str = new_str + check1; // перепрыгиваем разделитель
-    tmp = new_str + check1; 
+    tmp = new_str + check1;
     int check2 = strcspn(str, delim); // длина до следующего разделителя
     new_str = str + check2; // перепрыгиваем до следующего разделителя
     if (new_str == str) { // для случая когда стартовая строка пустая
