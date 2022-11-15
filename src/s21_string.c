@@ -250,29 +250,33 @@ char *s21_strcat_helper(char *dest, const char *src, size_t n, bool isNcat) {
 
 char *s21_strtok(char *str, const char *delim) {
   static char *new_str;
+  char *tmp = str;
   int check = 1;
   if (str != NULL) {
     new_str = str;
   } else if (!new_str) { //если строка закончилась, возвращаем 0
-    str = 0;
+    tmp = 0;
     check = 0;
   }
   if (check != 0) {
     int check1 = s21_strspn(new_str, delim); // есть ли сейчас разделитель
     str = new_str + check1; // перепрыгиваем разделитель
+    tmp = new_str + check1; 
     int check2 = strcspn(str, delim); // длина до следующего разделителя
     new_str = str + check2; // перепрыгиваем до следующего разделителя
     if (new_str == str) { // для случая когда стартовая строка пустая
-      str = 0;
-    }
-    if (*new_str != 0) { // зануляем разделитель
-      *new_str = 0;
-      new_str++;
+      tmp = 0;
+      new_str = 0;
     } else {
-      new_str = NULL; // если строка закончилась то NULL
+      if (*new_str != 0) { // зануляем разделитель
+        *new_str = 0;
+        new_str++;
+      } else {
+        new_str = NULL; // если строка закончилась то NULL
+      }
     }
   }
-  return str; // возвращаем строку до зануленного разделителя
+  return tmp; // возвращаем строку до зануленного разделителя
 }
 
 char *s21_strpbrk(const char *str, const char *sym) {
