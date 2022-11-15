@@ -1,6 +1,12 @@
+UNAME:=$(shell uname -s)
+ifeq ($(UNAME),Linux)
+	LFLAGS=-lcheck -lsubunit -lrt -lm -lpthread
+endif
+ifeq ($(UNAME),Darwin)
+	LFLAGS=-lcheck -lm
+endif
 CFLAGS=-Wall -Werror -Wextra
 GFLAGS=-fprofile-arcs -ftest-coverage
-LFLAGS=-lcheck -lsubunit -lrt -lm -lpthread
 SOURCES=
 
 all: gcov_report
