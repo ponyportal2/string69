@@ -6,31 +6,31 @@
 
 #include "s21_string.h"
 
-int sscanf(const char* buffer, const char* format, ...) {
-  va_list args;
-  va_start(args, format);
+// int sscanf(const char* buffer, const char* format, ...) {
+//   // va_list args;
+//   // va_start(args, format);
 
-  int i = 0;
-  while (buffer[i] != '\0') {
-    if (buffer[i] ==) {
-    }
-  }
+//   char tempSpecifiers[] = "%sabaka%aboba%abiba%";
+//   parseSpecifiers(tempSpecifiers);
+//   // int i = 0;
+//   // while (buffer[i] != '\0') {
+//   //   if (buffer[i] ==) {
+//   //   }
+//   // }
 
-  va_end(args);
-}
+//   // va_end(args);
+// }
 
-char* parsedSpecifiers(char* buffer) {
-  int specifierStarted = 0;
-  int i = 0;
-  while (buffer[i] != '\0') {
-    if (specifierStarted == 0) {
-      if (buffer[i] == '%') {
-        int specifierStarted = 1;
-      }
-    }
-    i++;
-  }
-}
+// char* parseSpecifiers(char* buffer) {
+//   int specifierStarted = 0;
+//   char specifiers[128][128] = {0};
+//   int i = 0;
+//   strcpy(specifiers[0], s21_strtok(buffer, "%"));
+//   do {
+//     i++;
+//     strcpy(specifiers[i], s21_strtok(NULL, "%"));
+//   } while (specifiers[i] != NULL);
+// }
 
 // while (format[i] != '\0') {
 //   if (format[i] == 's') {

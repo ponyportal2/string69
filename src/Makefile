@@ -17,6 +17,9 @@ main:
 shark:
 	gcc -Wextra -Wall -Werror shark_test.c s21_string.c -o shark_exec
 
+sharkss:
+	gcc -Wextra -Wall -Werror s21_string.c s21_sscanf.c shark_sscanf_test.c -o shark_exec
+
 s21_string.a:
 	gcc -c s21_string.c
 	ar rc libs21_string.a s21_string.o
