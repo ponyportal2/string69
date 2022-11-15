@@ -293,8 +293,8 @@ char *s21_strerror(int errcode) {
     error = ErrorNames[errcode];
   } else {
     char num_error[20];
-    snprintf(num_error, 20, "%d", errcode);
-    char unknown[50] = "Unknown error: ";
+    sprintf(num_error, "%d", errcode); // поменять на свой
+    char unknown[50] = "Unknown error: "; 
     s21_strcat(unknown, num_error);
     error = unknown;
   }
