@@ -1,4 +1,5 @@
 #include "s21_string.h"
+#include "s21_strerror_codes.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -145,12 +146,16 @@ size_t s21_strspn_helper(const char *stringOne, const char *stringTwo,
   int i = 0;
   int returnValue = 0;
   bool whileBreak = false;
-  while (stringTwo[i] != '\0' && whileBreak != true) {
-    if (s21_match(stringTwo, stringOne[i]) == isCspn) {
-      whileBreak = true;
-      returnValue = i;
+  if (s21_strlen(stringTwo) == 0) {
+    returnValue = s21_strlen(stringOne);
+  } else {
+    while (stringOne[i] != '\0' && whileBreak != true) {
+      if (s21_match(stringTwo, stringOne[i]) == isCspn) {
+        whileBreak = true;
+        returnValue = i;
+      }
+      i++;
     }
-    i++;
   }
   return (size_t)returnValue;
 }
@@ -249,29 +254,33 @@ char *s21_strcat_helper(char *dest, const char *src, size_t n, bool isNcat) {
 
 char *s21_strtok(char *str, const char *delim) {
   static char *new_str;
+  char *tmp = str;
   int check = 1;
   if (str != NULL) {
     new_str = str;
   } else if (!new_str) { //если строка закончилась, возвращаем 0
-    str = 0;
+    tmp = 0;
     check = 0;
   }
   if (check != 0) {
-    int check1 = s21_strspn(new_str, delim); // есть ли сейчас разделитель
+    int check1 = strspn(new_str, delim); // есть ли сейчас разделитель
     str = new_str + check1; // перепрыгиваем разделитель
+    tmp = new_str + check1;
     int check2 = strcspn(str, delim); // длина до следующего разделителя
     new_str = str + check2; // перепрыгиваем до следующего разделителя
     if (new_str == str) { // для случая когда стартовая строка пустая
-      str = 0;
-    }
-    if (*new_str != 0) { // зануляем разделитель
-      *new_str = 0;
-      new_str++;
+      tmp = 0;
+      new_str = 0;
     } else {
-      new_str = NULL; // если строка закончилась то NULL
+      if (*new_str != 0) { // зануляем разделитель
+        *new_str = 0;
+        new_str++;
+      } else {
+        new_str = NULL; // если строка закончилась то NULL
+      }
     }
   }
-  return str; // возвращаем строку до зануленного разделителя
+  return tmp; // возвращаем строку до зануленного разделителя
 }
 
 char *s21_strpbrk(const char *str, const char *sym) {
@@ -280,27 +289,26 @@ char *s21_strpbrk(const char *str, const char *sym) {
   if (check == s21_strlen(str)) {
     temp = NULL;
   } else {
-    temp = (char*)str + check;
+    temp = (char *)str + check;
   }
   return temp;
 }
 
-
-
 char *s21_strerror(int errcode) {
   char *error = NULL;
-  if (errcode >=0 && errcode <= 106) {
+  if (errcode >= 0 && errcode <= 106) {
     error = ErrorNames[errcode];
   } else {
     char num_error[20];
-    snprintf(num_error, 20, "%d", errcode);
+    sprintf(num_error, "%d", errcode); // поменять на свой
     char unknown[50] = "Unknown error: ";
     s21_strcat(unknown, num_error);
     error = unknown;
   }
   return error;
 }
-// char *s21_strcpy(char *dest, const char *src) { // karnhor
+
+// char *s21_strcpy(char *dest, const char *src) { // kerenhor
 //   char *tmp = dest;
 //   while (*src != '\0') {
 //     tmp = (char *)src;
@@ -314,7 +322,7 @@ char *s21_strerror(int errcode) {
 //   return tmp;
 // }
 
-// char *s21_strcat(char *str1, const char *str2) { // karnhor
+// char *s21_strcat(char *str1, const char *str2) { // kerenhor
 //   char *tmp1 = str1;
 //   const char *tmp2 = str2;
 //   while (*tmp1 != '\0') {
@@ -332,7 +340,7 @@ char *s21_strerror(int errcode) {
 //   return tmp1;
 // }
 
-// char *s21_strncat(char *str1, const char *str2, size_t n) { // karnhor
+// char *s21_strncat(char *str1, const char *str2, size_t n) { // kerenhor
 //   char *tmp1 = str1;
 //   const char *tmp2 = str2;
 //   while (*tmp1 != '\0') {
