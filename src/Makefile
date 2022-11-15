@@ -21,7 +21,7 @@ sharkss:
 	gcc -Wextra -Wall -Werror s21_string.c s21_sscanf.c shark_sscanf_test.c -o shark_exec
 
 git sharkss:
-	git add Makefile s21_sscanf.c s21_sscanf.h shark_sscanf_test.c
+	git add s21_sscanf.c s21_sscanf.h shark_sscanf_test.c
 	git commit -m "sharkmer: sscanf update"
 	git push origin develop
 
