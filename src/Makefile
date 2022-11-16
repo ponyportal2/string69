@@ -1,9 +1,11 @@
 UNAME:=$(shell uname -s)
 ifeq ($(UNAME),Linux)
 	LFLAGS=-lcheck -lsubunit -lrt -lm -lpthread
+	SYSFLAG=-D LINUX
 endif
 ifeq ($(UNAME),Darwin)
 	LFLAGS=-lcheck -lm
+	SYSFLAG=-D APPLE
 endif
 CFLAGS=-Wall -Werror -Wextra
 GFLAGS=-fprofile-arcs -ftest-coverage
@@ -12,7 +14,7 @@ SOURCES=
 all: gcov_report
 
 main:
-	gcc main_test.c s21_string.c -o main_exec
+	gcc $(SYSFLAG) main_test.c s21_string.c -o main_exec
 
 shark:
 	gcc -Wextra -Wall -Werror shark_test.c s21_string.c -o shark_exec

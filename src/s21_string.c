@@ -3,6 +3,9 @@
 #include <stdio.h>
 #include <string.h>
 
+
+
+
 size_t s21_strlen(const char *str) {
   size_t len = 0;
   while (*str != '\0') {
@@ -144,17 +147,21 @@ int s21_strncmp(const char *str1, const char *str2, size_t n) {
 size_t s21_strspn_helper(const char *stringOne, const char *stringTwo,
                          bool isCspn) {
   int i = 0;
-  int returnValue = 0;
+  size_t returnValue = 0;
   bool whileBreak = false;
+  bool check = false;
   if (s21_strlen(stringTwo) == 0) {
     returnValue = s21_strlen(stringOne);
   } else {
     while (stringOne[i] != '\0' && whileBreak != true) {
-      if (s21_match(stringTwo, stringOne[i]) == isCspn) {
+      if ((check = s21_match(stringTwo, stringOne[i])) == isCspn) {
         whileBreak = true;
         returnValue = i;
       }
       i++;
+        if (stringOne[i] == '\0' && check == false) {
+            returnValue = i;
+        }
     }
   }
   return (size_t)returnValue;
@@ -184,7 +191,7 @@ size_t s21_strcspn(const char *stringOne, const char *stringTwo) {
 char *s21_strrchr(const char *str, int c) {
   bool whileBreak = false;
   char *returnValue = NULL;
-  int i = s21_strlen(str) - 1;
+    size_t i = s21_strlen(str) - 1;
   while (i >= 0 && whileBreak != true) {
     if (str[i] == c) {
       returnValue = (char *)str + i;
@@ -205,7 +212,7 @@ char *s21_strncpy(char *dest, const char *src, size_t n) { // sharkmer
 
 char *s21_strcpy_helper(char *dest, const char *src, size_t n,
                         bool isNcopy) { // sharkmer
-  int destLen = s21_strlen(dest - 1);
+  size_t destLen = s21_strlen(dest - 1);
   int i = 0;
   size_t counter = 0;
   if (isNcopy == true) {
@@ -233,7 +240,7 @@ char *s21_strncat(char *dest, const char *src, size_t n) {
 }
 
 char *s21_strcat_helper(char *dest, const char *src, size_t n, bool isNcat) {
-  int destLen = s21_strlen(dest);
+    size_t destLen = s21_strlen(dest);
   int i = 0;
   size_t counter = 0;
   if (isNcat == 1) { // strncat
@@ -263,10 +270,10 @@ char *s21_strtok(char *str, const char *delim) {
     check = 0;
   }
   if (check != 0) {
-    int check1 = strspn(new_str, delim); // есть ли сейчас разделитель
+      size_t check1 = s21_strspn(new_str, delim); // есть ли сейчас разделитель
     str = new_str + check1; // перепрыгиваем разделитель
     tmp = new_str + check1;
-    int check2 = strcspn(str, delim); // длина до следующего разделителя
+      size_t check2 = s21_strcspn(str, delim); // длина до следующего разделителя
     new_str = str + check2; // перепрыгиваем до следующего разделителя
     if (new_str == str) { // для случая когда стартовая строка пустая
       tmp = 0;
@@ -285,7 +292,7 @@ char *s21_strtok(char *str, const char *delim) {
 
 char *s21_strpbrk(const char *str, const char *sym) {
   char *temp;
-  size_t check = strcspn(str, sym);
+  size_t check = s21_strcspn(str, sym);
   if (check == s21_strlen(str)) {
     temp = NULL;
   } else {
@@ -296,15 +303,29 @@ char *s21_strpbrk(const char *str, const char *sym) {
 
 char *s21_strerror(int errcode) {
   char *error = NULL;
-  if (errcode >= 0 && errcode <= 106) {
+#ifdef APPLE
+    int max = 106;
+    static char unknown[50] = "Unknown error: ";
+#endif
+#ifdef LINUX
+    int max = 133;
+    static char unknown[50] = "Unknown error ";
+#endif
+#if defined(LINUX) || defined(APPLE)
+  if (errcode >= 0 && errcode <= max) {
     error = ErrorNames[errcode];
   } else {
     char num_error[20];
     sprintf(num_error, "%d", errcode); // поменять на свой
-    char unknown[50] = "Unknown error: ";
+      size_t i = strlen(unknown);
+      while(unknown[i] != ' ') {
+          unknown[i] = '\0';
+          i--;
+      }
     s21_strcat(unknown, num_error);
     error = unknown;
   }
+#endif
   return error;
 }
 
