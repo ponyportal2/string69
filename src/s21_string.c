@@ -190,7 +190,7 @@ size_t s21_strcspn(const char *stringOne, const char *stringTwo) {
 char *s21_strrchr(const char *str, int c) {
   bool whileBreak = false;
   char *returnValue = NULL;
-  size_t i = s21_strlen(str) - 1;
+  long long int i = s21_strlen(str) - 1;
   while (i >= 0 && whileBreak != true) {
     if (str[i] == c) {
       returnValue = (char *)str + i;
@@ -301,6 +301,7 @@ char *s21_strpbrk(const char *str, const char *sym) {
 }
 
 char *s21_strerror(int errcode) {
+  (void)errcode;
   char *error = NULL;
 #ifdef APPLE
   int max = 106;
