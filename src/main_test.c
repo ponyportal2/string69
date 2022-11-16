@@ -100,7 +100,9 @@ char test22[20] = "asd/.fgh/hjk";
 char test122[5] = "./";
 printf("%s\n", s21_strpbrk(test22, test122));
 printf("%s\n", strpbrk(test22, test122));
-
-printf("%s\n", strerror(11));
-printf("%s\n", s21_strerror(11));
+    
+printf("%s\n", strerror(106));
+printf("%s\n", s21_strerror(107)); // \n после %s почему-то ломает вывод...
+    printf("%s\n", s21_strerror(108)); 
+    return 0;
 }
