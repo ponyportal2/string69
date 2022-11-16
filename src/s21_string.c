@@ -1,10 +1,9 @@
 #include "s21_string.h"
-#include "s21_strerror_codes.h"
+
 #include <stdio.h>
 #include <string.h>
 
-
-
+#include "s21_strerror_codes.h"
 
 size_t s21_strlen(const char *str) {
   size_t len = 0;
@@ -159,9 +158,9 @@ size_t s21_strspn_helper(const char *stringOne, const char *stringTwo,
         returnValue = i;
       }
       i++;
-        if (stringOne[i] == '\0' && check == false) {
-            returnValue = i;
-        }
+      if (stringOne[i] == '\0' && check == false) {
+        returnValue = i;
+      }
     }
   }
   return (size_t)returnValue;
@@ -191,7 +190,7 @@ size_t s21_strcspn(const char *stringOne, const char *stringTwo) {
 char *s21_strrchr(const char *str, int c) {
   bool whileBreak = false;
   char *returnValue = NULL;
-    size_t i = s21_strlen(str) - 1;
+  size_t i = s21_strlen(str) - 1;
   while (i >= 0 && whileBreak != true) {
     if (str[i] == c) {
       returnValue = (char *)str + i;
@@ -202,16 +201,16 @@ char *s21_strrchr(const char *str, int c) {
   return returnValue;
 }
 
-char *s21_strcpy(char *dest, const char *src) { // sharkmer
+char *s21_strcpy(char *dest, const char *src) {  // sharkmer
   return s21_strcpy_helper(dest, src, 0, false);
 }
 
-char *s21_strncpy(char *dest, const char *src, size_t n) { // sharkmer
+char *s21_strncpy(char *dest, const char *src, size_t n) {  // sharkmer
   return s21_strcpy_helper(dest, src, n, true);
 }
 
 char *s21_strcpy_helper(char *dest, const char *src, size_t n,
-                        bool isNcopy) { // sharkmer
+                        bool isNcopy) {  // sharkmer
   size_t destLen = s21_strlen(dest - 1);
   int i = 0;
   size_t counter = 0;
@@ -240,16 +239,16 @@ char *s21_strncat(char *dest, const char *src, size_t n) {
 }
 
 char *s21_strcat_helper(char *dest, const char *src, size_t n, bool isNcat) {
-    size_t destLen = s21_strlen(dest);
+  size_t destLen = s21_strlen(dest);
   int i = 0;
   size_t counter = 0;
-  if (isNcat == 1) { // strncat
+  if (isNcat == 1) {  // strncat
     while (src[i] != '\0' && counter < n) {
       dest[destLen + i] = src[i];
       counter++;
       i++;
     }
-  } else { // strcat
+  } else {  // strcat
     while (src[i] != '\0') {
       dest[destLen + i] = src[i];
       i++;
@@ -265,29 +264,29 @@ char *s21_strtok(char *str, const char *delim) {
   int check = 1;
   if (str != NULL) {
     new_str = str;
-  } else if (!new_str) { //если строка закончилась, возвращаем 0
+  } else if (!new_str) {  //если строка закончилась, возвращаем 0
     tmp = 0;
     check = 0;
   }
   if (check != 0) {
-      size_t check1 = s21_strspn(new_str, delim); // есть ли сейчас разделитель
-    str = new_str + check1; // перепрыгиваем разделитель
+    size_t check1 = s21_strspn(new_str, delim);  // есть ли сейчас разделитель
+    str = new_str + check1;  // перепрыгиваем разделитель
     tmp = new_str + check1;
-      size_t check2 = s21_strcspn(str, delim); // длина до следующего разделителя
-    new_str = str + check2; // перепрыгиваем до следующего разделителя
-    if (new_str == str) { // для случая когда стартовая строка пустая
+    size_t check2 = s21_strcspn(str, delim);  // длина до следующего разделителя
+    new_str = str + check2;  // перепрыгиваем до следующего разделителя
+    if (new_str == str) {  // для случая когда стартовая строка пустая
       tmp = 0;
       new_str = 0;
     } else {
-      if (*new_str != 0) { // зануляем разделитель
+      if (*new_str != 0) {  // зануляем разделитель
         *new_str = 0;
         new_str++;
       } else {
-        new_str = NULL; // если строка закончилась то NULL
+        new_str = NULL;  // если строка закончилась то NULL
       }
     }
   }
-  return tmp; // возвращаем строку до зануленного разделителя
+  return tmp;  // возвращаем строку до зануленного разделителя
 }
 
 char *s21_strpbrk(const char *str, const char *sym) {
@@ -304,24 +303,24 @@ char *s21_strpbrk(const char *str, const char *sym) {
 char *s21_strerror(int errcode) {
   char *error = NULL;
 #ifdef APPLE
-    int max = 106;
-    static char unknown[50] = "Unknown error: ";
+  int max = 106;
+  static char unknown[50] = "Unknown error: ";
 #endif
 #ifdef LINUX
-    int max = 133;
-    static char unknown[50] = "Unknown error ";
+  int max = 133;
+  static char unknown[50] = "Unknown error ";
 #endif
 #if defined(LINUX) || defined(APPLE)
   if (errcode >= 0 && errcode <= max) {
     error = ErrorNames[errcode];
   } else {
     char num_error[20];
-    sprintf(num_error, "%d", errcode); // поменять на свой
-      size_t i = strlen(unknown);
-      while(unknown[i] != ' ') {
-          unknown[i] = '\0';
-          i--;
-      }
+    sprintf(num_error, "%d", errcode);  // поменять на свой
+    size_t i = strlen(unknown);
+    while (unknown[i] != ' ') {
+      unknown[i] = '\0';
+      i--;
+    }
     s21_strcat(unknown, num_error);
     error = unknown;
   }
@@ -379,3 +378,26 @@ char *s21_strerror(int errcode) {
 //   }
 //   return tmp1;
 // }
+
+/* SHARKMER:
+char* s21_strchr(const char* str, int c) {
+  bool whileBreak = false;
+  char* returnValue = NULL;
+  int i = 0;
+  while (str[i] != '\0' || whileBreak == true) {
+    if (str[i] == c) {
+      returnValue = (char*)str + i;
+    }
+    i++;
+  }
+  return returnValue;
+}
+
+size_t s21_strlen(const char* str) {
+  size_t i = 0;
+  while (str[i] != '\0') {
+    i++;
+  }
+  return (size_t)i;
+}
+*/
