@@ -140,9 +140,9 @@ int s21_strcmp(const char *str1, const char *str2) {
   if (!*str1 && !*str2) {
     result = 0;
   } else if (!*str2) {
-    result = 1;
+    result = *str1;
   } else if (!*str1) {
-    result = -1;
+    result = -*str2;
   }
   return result;
 }
@@ -162,9 +162,9 @@ int s21_strncmp(const char *str1, const char *str2, size_t n) {
   if (!*str1 && !*str2 && n) {
     result = 0;
   } else if (!*str2 && n) {
-    result = 1;
+    result = *str1;
   } else if (!*str1 && n) {
-    result = -1;
+    result = -*str2;
   }
   return result;
 }
