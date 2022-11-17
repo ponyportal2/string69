@@ -43,4 +43,20 @@ void add_cases(TCase** tc, size_t index);
 Suite *create_str_suite(void);
 TCase *create_tc(size_t index);
 
+// goodStringTestCases:
+
+// ""
+// NULL
+// "\n lorem \n\t ipsum \n"
+// "\n\0 lorem \n\t ipsum \n"
+// "\0\n lorem \n\t ipsum \n"
+// "\n lorem \0\n\t ipsum \n"
+// "\n lorem \n\t ipsum \0\n"
+// "\n lorem \n\t ipsum \n\0"
+// " lorem \n\t ipsum \n"
+// "\0 lorem \n\t ipsum \n"
+// " lorem \0\n\t ipsum \n"
+// " lorem \n\t ipsum \0\n"
+// " lorem \n\t ipsum \n\0"
+
 #endif // SRC_TEST_H_
