@@ -58,5 +58,6 @@ TCase *create_tc(size_t index);
 // " lorem \0\n\t ipsum \n"
 // " lorem \n\t ipsum \0\n"
 // " lorem \n\t ipsum \n\0"
+// "\0\0\0\00\00\00 is \n0 0\t\00 is 0 0\n"
 
 #endif // SRC_TEST_H_
