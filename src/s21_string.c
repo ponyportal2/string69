@@ -1,6 +1,7 @@
 #include "s21_string.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "s21_strerror_codes.h"
@@ -22,21 +23,21 @@ char *s21_strstr(char *str1, char *str2) {
   } else if (str1[0] == '\0' && str2[0] == '\0') {
     a = "";
   } else {
-  while (str1[i] != '\0' && a == NULL) {
-    if (str1[i] == str2[j]) {
-      j++;
-    } else {
-      j = 0;
-    }
-    if (str2[j] == '\0') {
-      if (j == s21_strlen(str2) && j != 0) {
-        a = str1 + i - j + 1;
-      } else if (j == s21_strlen(str2) && j == 0) {
-        a = str1;
+    while (str1[i] != '\0' && a == NULL) {
+      if (str1[i] == str2[j]) {
+        j++;
+      } else {
+        j = 0;
       }
+      if (str2[j] == '\0') {
+        if (j == s21_strlen(str2) && j != 0) {
+          a = str1 + i - j + 1;
+        } else if (j == s21_strlen(str2) && j == 0) {
+          a = str1;
+        }
+      }
+      i++;
     }
-    i++;
-  }
   }
   return a;
 }
@@ -46,16 +47,16 @@ void *s21_memchr(const void *arr, int c, size_t n) {
   unsigned char *tmp = (unsigned char *)arr;
   int *tmp_int = (int *)arr;
   if (*tmp != '\0') {
-  while ((*tmp != c && *tmp_int != c) && n > 1) {
-    n--;
-    tmp++;
-    tmp_int++;
-  }
-  if (*tmp == c) {
-    sym = tmp;
-  } else if (*tmp_int == c) {
-    sym = tmp_int;
-  }
+    while ((*tmp != c && *tmp_int != c) && n > 1) {
+      n--;
+      tmp++;
+      tmp_int++;
+    }
+    if (*tmp == c) {
+      sym = tmp;
+    } else if (*tmp_int == c) {
+      sym = tmp_int;
+    }
   }
   return sym;
 }
@@ -177,20 +178,20 @@ size_t s21_strspn_helper(const char *stringOne, const char *stringTwo,
   size_t returnValue = 0;
   bool whileBreak = false;
   bool check = false;
- 
-    while (stringOne[i] != '\0' && whileBreak != true) {
-      if ((check = s21_match(stringTwo, stringOne[i])) == isCspn) {
-        whileBreak = true;
-        returnValue = i;
-      }
-      i++;
-      if (stringOne[i] == '\0' && check == false && isCspn == true) {
-        returnValue = i;
-      }
+
+  while (stringOne[i] != '\0' && whileBreak != true) {
+    if ((check = s21_match(stringTwo, stringOne[i])) == isCspn) {
+      whileBreak = true;
+      returnValue = i;
     }
-      if (stringOne[i] == '\0' && check == true && isCspn == false) {
-        returnValue = i;
-      }
+    i++;
+    if (stringOne[i] == '\0' && check == false && isCspn == true) {
+      returnValue = i;
+    }
+  }
+  if (stringOne[i] == '\0' && check == true && isCspn == false) {
+    returnValue = i;
+  }
   return (size_t)returnValue;
 }
 
@@ -219,7 +220,7 @@ char *s21_strrchr(const char *str, int c) {
   bool whileBreak = false;
   char *returnValue = NULL;
   long long int i = s21_strlen(str) - 1;
-  if (c =='\0') {
+  if (c == '\0') {
     returnValue = "";
   }
   while (i >= 0 && whileBreak != true) {
@@ -232,16 +233,16 @@ char *s21_strrchr(const char *str, int c) {
   return returnValue;
 }
 
-char *s21_strcpy(char *dest, const char *src) { // sharkmer
+char *s21_strcpy(char *dest, const char *src) {  // sharkmer
   return s21_strcpy_helper(dest, src, 0, false);
 }
 
-char *s21_strncpy(char *dest, const char *src, size_t n) { // sharkmer
+char *s21_strncpy(char *dest, const char *src, size_t n) {  // sharkmer
   return s21_strcpy_helper(dest, src, n, true);
 }
 
 char *s21_strcpy_helper(char *dest, const char *src, size_t n,
-                        bool isNcopy) { // sharkmer
+                        bool isNcopy) {  // sharkmer
   size_t destLen = s21_strlen(dest - 1);
   int i = 0;
   size_t counter = 0;
@@ -273,13 +274,13 @@ char *s21_strcat_helper(char *dest, const char *src, size_t n, bool isNcat) {
   size_t destLen = s21_strlen(dest);
   int i = 0;
   size_t counter = 0;
-  if (isNcat == 1) { // strncat
+  if (isNcat == 1) {  // strncat
     while (src[i] != '\0' && counter < n) {
       dest[destLen + i] = src[i];
       counter++;
       i++;
     }
-  } else { // strcat
+  } else {  // strcat
     while (src[i] != '\0') {
       dest[destLen + i] = src[i];
       i++;
@@ -295,30 +296,30 @@ char *s21_strtok(char *str, const char *delim) {
   int check = 1;
   if (str != NULL) {
     new_str = str;
-  } else if (!new_str) { //если строка закончилась, возвращаем 0
+  } else if (!new_str) {  //если строка закончилась, возвращаем 0
     tmp = 0;
     check = 0;
   }
   if (check != 0) {
-    size_t check1 = s21_strspn(new_str, delim); // есть ли сейчас разделитель
-    
-    str = new_str + check1; // перепрыгиваем разделитель
+    size_t check1 = s21_strspn(new_str, delim);  // есть ли сейчас разделитель
+
+    str = new_str + check1;  // перепрыгиваем разделитель
     tmp = new_str + check1;
-    size_t check2 = s21_strcspn(str, delim); // длина до следующего разделителя
-    new_str = str + check2; // перепрыгиваем до следующего разделителя
-    if (new_str == str) { // для случая когда стартовая строка пустая
+    size_t check2 = s21_strcspn(str, delim);  // длина до следующего разделителя
+    new_str = str + check2;  // перепрыгиваем до следующего разделителя
+    if (new_str == str) {  // для случая когда стартовая строка пустая
       tmp = 0;
       new_str = 0;
     } else {
-      if (*new_str != 0) { // зануляем разделитель
+      if (*new_str != 0) {  // зануляем разделитель
         *new_str = 0;
         new_str++;
       } else {
-        new_str = NULL; // если строка закончилась то NULL
+        new_str = NULL;  // если строка закончилась то NULL
       }
     }
   }
-  return tmp; // возвращаем строку до зануленного разделителя
+  return tmp;  // возвращаем строку до зануленного разделителя
 }
 
 char *s21_strpbrk(const char *str, const char *sym) {
@@ -332,8 +333,8 @@ char *s21_strpbrk(const char *str, const char *sym) {
   return temp;
 }
 
-char *s21_strerror(int errcode) { // надо в мейк добавить $(SYSFLAG)
-(void) errcode;
+char *s21_strerror(int errcode) {  // надо в мейк добавить $(SYSFLAG)
+  (void)errcode;
   char *error = NULL;
 #ifdef APPLE
   int max = 106;
@@ -345,14 +346,14 @@ char *s21_strerror(int errcode) { // надо в мейк добавить $(SYS
 #endif
 #if defined(LINUX) || defined(APPLE)
   if (errcode >= 0 && errcode <= max) {
-    #ifdef APPLE
+#ifdef APPLE
     error = ErrorNames[errcode];
-    #else
+#else
     error = ErrorNamesLinux[errcode];
-    #endif
+#endif
   } else {
     char num_error[20];
-    sprintf(num_error, "%d", errcode); // поменять на свой
+    sprintf(num_error, "%d", errcode);  // поменять на свой
     size_t i = strlen(unknown);
     while (unknown[i] != ' ') {
       unknown[i] = '\0';
@@ -440,3 +441,93 @@ size_t s21_strlen(const char* str) {
   return (size_t)i;
 }
 */
+
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+// duffmank
+// Part 5 Специальные функции обработки строк (вдохновленные классом String в
+// языке C#)
+void *insert(const char *src, const char *str, size_t start_index) {
+  char *temp = NULL;
+  if (start_index < strlen(src)) {
+    temp = malloc(sizeof(char) * (strlen(src) + strlen(str)));
+    for (size_t i = 0; i < start_index; i++) {
+      temp[i] = str[i];
+    }
+    for (size_t i = start_index; (i - start_index) < strlen(src); i++) {
+      temp[i] = src[i - start_index];
+    }
+    for (size_t i = start_index + strlen(src); i < (strlen(src) + strlen(str));
+         i++) {
+      temp[i] = str[i - strlen(src)];
+    }
+  }
+  return temp;
+}
+
+void *to_upper(const char *str) {
+  char *temp = NULL;
+  if (str != NULL) {
+    temp = malloc(sizeof(char) * strlen(str));
+    for (size_t i = 0; i < strlen(str); i++) {
+      if (str[i] >= 97 && str[i] <= 122) {
+        temp[i] = str[i] - 32;
+      } else {
+        temp[i] = str[i];
+      }
+    }
+  }
+  return temp;
+}
+
+void *to_lower(const char *str) {
+  char *temp = NULL;
+  if (str != NULL) {
+    temp = malloc(sizeof(char) * strlen(str));
+    for (size_t i = 0; i < strlen(str); i++) {
+      if (str[i] >= 65 && str[i] <= 90) {
+        temp[i] = str[i] + 32;
+      } else {
+        temp[i] = str[i];
+      }
+    }
+  }
+  return temp;
+}
+
+void *trim(const char *src, const char *trim_chars) {
+  char *temp = NULL;
+  if (src != NULL && trim_chars != NULL) {
+    int counts = 0;
+    int counte = 0;
+    for (size_t i = 0; i < strlen(src); i++) {
+      for (size_t j = 0; j < strlen(trim_chars); j++) {
+        if (src[i] == trim_chars[j]) {
+          counts++;
+          break;
+        }
+      }
+      if (counts - 1 != i) {
+        break;
+      }
+    }
+    for (size_t i = strlen(src) - 1; i > counts; i--) {
+      for (size_t j = 0; j < strlen(trim_chars); j++) {
+        if (src[i] == trim_chars[j]) {
+          counte++;
+          break;
+        }
+      }
+      if (counte != strlen(src) - i) {
+        break;
+      }
+    }
+    if (counts + counte <= strlen(src)) {
+      temp = malloc(sizeof(char) * (strlen(src) - counts - counte));
+      for (size_t i = counts; i < strlen(src) - counte; i++) {
+        temp[i - counts] = src[i];
+      }
+    }
+  }
+  return temp;
+}
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

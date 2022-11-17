@@ -48,4 +48,10 @@ bool s21_match(const char *inputCharArr, char inputChar);
 size_t s21_strspn_helper(const char *stringOne, const char *stringTwo,
                          bool isCspn);
 
-                        
+// duffmank
+// Part 5 Специальные функции обработки строк (вдохновленные классом String в языке C#)                        
+void* insert(const char* src, const char* str, size_t start_index);
+void* to_upper(const char* str);
+void* to_lower(const char* str);
+void* trim(const char* src, const char* trim_chars);
+// duffmank
