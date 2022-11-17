@@ -19,10 +19,10 @@ main:
 	gcc $(SYSFLAG) main_test.c s21_string.c -o main_exec
 
 shark:
-	gcc -Wextra -Wall -Werror shark_test.c s21_string.c -o shark_exec
+	gcc $(SYSFLAG) -Wextra -Wall -Werror shark_test.c s21_string.c -o shark_exec
 
 sharkss:
-	gcc -Wextra -Wall -Werror s21_string.c s21_sscanf.c shark_sscanf_test.c -o shark_exec
+	gcc $(SYSFLAG) -Wextra -Wall -Werror s21_string.c s21_sscanf.c shark_sscanf_test.c -o shark_exec
 
 git_sharkss:
 	git add s21_sscanf.c s21_sscanf.h shark_sscanf_test.c shark_sscanf_test.h
@@ -33,24 +33,24 @@ style:
 	clang-format -n -style=Google *.c *.h
 
 s21_string.a:
-	gcc -c s21_string.c
+	gcc $(SYSFLAG) -c s21_string.c
 	ar rc libs21_string.a s21_string.o
 	ranlib libs21_string.a
 	rm -f *.o
 
 gcov_report:
-	gcc $(GFLAGS) test.c s21_string.c $(LFLAGS) -o test
+	gcc $(GFLAGS) $(SYSFLAG) test.c s21_string.c $(LFLAGS) -o test
 	./test
 	lcov -t "test" -o test.info -c -d .
 	genhtml -o report test.info
 	open report/index.html
 	
 test: s21_string.a
-	gcc test.c -L. -ls21_string $(LFLAGS) -o test
+	gcc $(SYSFLAG) test.c -L. -ls21_string $(LFLAGS) -o test
 	./test
 
 leaks: s21_string.a
-	gcc test.c -L. -ls21_string $(LFLAGS) -o test
+	gcc $(SYSFLAG) test.c -L. -ls21_string $(LFLAGS) -o test
 	$(LEAK) ./test
 
 rebuild: clean gcov_report
