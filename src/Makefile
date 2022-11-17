@@ -47,6 +47,10 @@ gcov_report:
 	
 test: s21_string.a
 	gcc test.c -L. -ls21_string $(LFLAGS) -o test
+	./test
+
+leaks: s21_string.a
+	gcc test.c -L. -ls21_string $(LFLAGS) -o test
 	$(LEAK) ./test
 
 rebuild: clean gcov_report
