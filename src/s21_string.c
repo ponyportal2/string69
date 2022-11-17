@@ -17,6 +17,11 @@ size_t s21_strlen(const char *str) {
 char *s21_strstr(char *str1, char *str2) {
   size_t i = 0, j = 0;
   char *a = NULL;
+  if (str1[0] == '\0' && str2[0] != '\0') {
+    a = NULL;
+  } else if (str1[0] == '\0' && str2[0] == '\0') {
+    a = "";
+  } else {
   while (str1[i] != '\0' && a == NULL) {
     if (str1[i] == str2[j]) {
       j++;
@@ -24,24 +29,33 @@ char *s21_strstr(char *str1, char *str2) {
       j = 0;
     }
     if (str2[j] == '\0') {
-      if (j == s21_strlen(str2)) {
+      if (j == s21_strlen(str2) && j != 0) {
         a = str1 + i - j + 1;
+      } else if (j == s21_strlen(str2) && j == 0) {
+        a = str1;
       }
     }
     i++;
+  }
   }
   return a;
 }
 
 void *s21_memchr(const void *arr, int c, size_t n) {
-  unsigned char *sym = NULL;
+  void *sym = NULL;
   unsigned char *tmp = (unsigned char *)arr;
-  while (*tmp != c && n > 1) {
+  int *tmp_int = (int *)arr;
+  if (*tmp != '\0') {
+  while ((*tmp != c && *tmp_int != c) && n > 1) {
     n--;
     tmp++;
+    tmp_int++;
   }
   if (*tmp == c) {
     sym = tmp;
+  } else if (*tmp_int == c) {
+    sym = tmp_int;
+  }
   }
   return sym;
 }
@@ -123,6 +137,13 @@ int s21_strcmp(const char *str1, const char *str2) {
       str2++;
     }
   }
+  if (!*str1 && !*str2) {
+    result = 0;
+  } else if (!*str2) {
+    result = 1;
+  } else if (!*str1) {
+    result = -1;
+  }
   return result;
 }
 
@@ -138,6 +159,13 @@ int s21_strncmp(const char *str1, const char *str2, size_t n) {
       n--;
     }
   }
+  if (!*str1 && !*str2 && n) {
+    result = 0;
+  } else if (!*str2 && n) {
+    result = 1;
+  } else if (!*str1 && n) {
+    result = -1;
+  }
   return result;
 }
 
@@ -149,20 +177,20 @@ size_t s21_strspn_helper(const char *stringOne, const char *stringTwo,
   size_t returnValue = 0;
   bool whileBreak = false;
   bool check = false;
-  if (s21_strlen(stringTwo) == 0) {
-    returnValue = s21_strlen(stringOne);
-  } else {
+ 
     while (stringOne[i] != '\0' && whileBreak != true) {
       if ((check = s21_match(stringTwo, stringOne[i])) == isCspn) {
         whileBreak = true;
         returnValue = i;
       }
       i++;
-      if (stringOne[i] == '\0' && check == false) {
+      if (stringOne[i] == '\0' && check == false && isCspn == true) {
         returnValue = i;
       }
     }
-  }
+      if (stringOne[i] == '\0' && check == true && isCspn == false) {
+        returnValue = i;
+      }
   return (size_t)returnValue;
 }
 
@@ -191,6 +219,9 @@ char *s21_strrchr(const char *str, int c) {
   bool whileBreak = false;
   char *returnValue = NULL;
   long long int i = s21_strlen(str) - 1;
+  if (c =='\0') {
+    returnValue = "";
+  }
   while (i >= 0 && whileBreak != true) {
     if (str[i] == c) {
       returnValue = (char *)str + i;
@@ -225,9 +256,9 @@ char *s21_strcpy_helper(char *dest, const char *src, size_t n,
       dest[i] = src[i];
       i++;
     }
+    dest[i] = '\0';
   }
-  dest[i] = '\0';
-  return (char *)dest + destLen;
+  return (char *)dest;
 }
 
 char *s21_strcat(char *dest, const char *src) {
@@ -270,6 +301,7 @@ char *s21_strtok(char *str, const char *delim) {
   }
   if (check != 0) {
     size_t check1 = s21_strspn(new_str, delim); // есть ли сейчас разделитель
+    
     str = new_str + check1; // перепрыгиваем разделитель
     tmp = new_str + check1;
     size_t check2 = s21_strcspn(str, delim); // длина до следующего разделителя
@@ -300,8 +332,8 @@ char *s21_strpbrk(const char *str, const char *sym) {
   return temp;
 }
 
-char *s21_strerror(int errcode) {
-  (void)errcode;
+char *s21_strerror(int errcode) { // надо в мейк добавить $(SYSFLAG)
+(void) errcode;
   char *error = NULL;
 #ifdef APPLE
   int max = 106;
@@ -313,7 +345,11 @@ char *s21_strerror(int errcode) {
 #endif
 #if defined(LINUX) || defined(APPLE)
   if (errcode >= 0 && errcode <= max) {
+    #ifdef APPLE
     error = ErrorNames[errcode];
+    #else
+    error = ErrorNamesLinux[errcode];
+    #endif
   } else {
     char num_error[20];
     sprintf(num_error, "%d", errcode); // поменять на свой
@@ -380,7 +416,7 @@ char *s21_strerror(int errcode) {
 //   }
 //   return tmp1;
 // }
-/*
+*/
 
 /* SHARKMER:
 char* s21_strchr(const char* str, int c) {
