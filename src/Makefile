@@ -1,10 +1,12 @@
 UNAME:=$(shell uname -s)
 ifeq ($(UNAME),Linux)
 	LFLAGS=-lcheck -lsubunit -lrt -lm -lpthread
+	LEAK=valgrind --leak-check=full
 	SYSFLAG=-D LINUX
 endif
 ifeq ($(UNAME),Darwin)
 	LFLAGS=-lcheck -lm
+	LEAK=leaks -quiet -atExit --
 	SYSFLAG=-D APPLE
 endif
 CFLAGS=-Wall -Werror -Wextra
@@ -28,7 +30,7 @@ git_sharkss:
 	git push origin develop
 
 style:
-	clang-format -n style=Google *.c *.h
+	clang-format -n -style=Google *.c *.h
 
 s21_string.a:
 	gcc -c s21_string.c
@@ -45,7 +47,7 @@ gcov_report:
 	
 test: s21_string.a
 	gcc test.c -L. -ls21_string $(LFLAGS) -o test
-	./test
+	$(LEAK) ./test
 
 rebuild: clean gcov_report
 
