@@ -46,7 +46,7 @@ void *s21_memchr(const void *arr, int c, size_t n) {
   void *sym = NULL;
   unsigned char *tmp = (unsigned char *)arr;
   int *tmp_int = (int *)arr;
-  if (*tmp != '\0') {
+  if (n > 0) {
     while ((*tmp != c && *tmp_int != c) && n > 1) {
       n--;
       tmp++;
@@ -58,6 +58,7 @@ void *s21_memchr(const void *arr, int c, size_t n) {
       sym = tmp_int;
     }
   }
+  
   return sym;
 }
 
@@ -128,6 +129,9 @@ char *s21_strchr(const char *str, int c) {
       check = 0;
     }
     str++;
+  }
+  if (c == '\0') {
+    sym = "";
   }
   return sym;
 }
