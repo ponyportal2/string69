@@ -65,7 +65,7 @@ int s21_memcmp(const void *str1, const void *str2, size_t n) {
   int result = 0;
   char *tmp1 = (char *)str1;
   char *tmp2 = (char *)str2;
-  if (str1 && str2 || (n % 2 == 1)) {
+ 
   while (n > 0) {
     result = *(char *)tmp1 - *(char *)tmp2;
     if (result != 0) {
@@ -76,7 +76,7 @@ int s21_memcmp(const void *str1, const void *str2, size_t n) {
       n--;
     }
   }
-  }
+  
   return result;
 }
 
