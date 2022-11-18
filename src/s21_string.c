@@ -46,7 +46,7 @@ void *s21_memchr(const void *arr, int c, size_t n) {
   void *sym = NULL;
   unsigned char *tmp = (unsigned char *)arr;
   int *tmp_int = (int *)arr;
-  if (*tmp != '\0') {
+  if (n > 0) {
     while ((*tmp != c && *tmp_int != c) && n > 1) {
       n--;
       tmp++;
@@ -58,6 +58,7 @@ void *s21_memchr(const void *arr, int c, size_t n) {
       sym = tmp_int;
     }
   }
+  
   return sym;
 }
 
@@ -65,6 +66,7 @@ int s21_memcmp(const void *str1, const void *str2, size_t n) {
   int result = 0;
   char *tmp1 = (char *)str1;
   char *tmp2 = (char *)str2;
+ 
   while (n > 0) {
     result = *(char *)tmp1 - *(char *)tmp2;
     if (result != 0) {
@@ -75,6 +77,7 @@ int s21_memcmp(const void *str1, const void *str2, size_t n) {
       n--;
     }
   }
+  
   return result;
 }
 
@@ -111,6 +114,9 @@ void *s21_memset(void *str, int c, size_t n) {
     *tmp = c;
     tmp++;
   }
+  if (n == 0) {
+    fprintf(stderr, "Original daet error");
+  }
   return str;
 }
 
@@ -123,6 +129,9 @@ char *s21_strchr(const char *str, int c) {
       check = 0;
     }
     str++;
+  }
+  if (c == '\0') {
+    sym = "";
   }
   return sym;
 }
@@ -248,6 +257,11 @@ char *s21_strcpy_helper(char *dest, const char *src, size_t n,
   if (isNcopy == true) {
     while (src[i] != '\0' && counter < n) {
       dest[i] = src[i];
+      counter++;
+      i++;
+    }
+    while (counter < n) {
+      dest[i] ='\0';
       counter++;
       i++;
     }
