@@ -3,7 +3,16 @@
 #include "s21_string.h"
 
 int s21_sscanf(const char *input, const char *format, ...);
-char *parseNextSpecifier(char *tempSpecifiers);
+void getNextElem(char *input, char elem[8192], int type);
+void formatI(char currentInputElem[8192], bool *varArgLoaded,
+             void *currentVarArg);
+void formatParsing(char formatStatic[16384], char currentFormatElem[8192],
+                   bool *formatLoaded);
+void inputParsing(char inputStatic[16384], char currentInputElem[8192],
+                  bool *inputLoaded);
+void varArgParsingAndAssignment(char currentFormatElem[8192],
+                                char currentInputElem[8192], bool *varArgLoaded,
+                                void *currentVarArg);
 
 // Спецификатор формата для сканирующих функций следует прототипу:
 // %[*][ширина][длина]спецификатор.
