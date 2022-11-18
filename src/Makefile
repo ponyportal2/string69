@@ -11,7 +11,6 @@ ifeq ($(UNAME),Darwin)
 endif
 CFLAGS=-Wall -Werror -Wextra
 GFLAGS=-fprofile-arcs -ftest-coverage
-SOURCES=
 
 all: s21_string.a
 
@@ -40,21 +39,22 @@ s21_string.a:
 
 gcov_report:
 	gcc $(GFLAGS) $(SYSFLAG) test.c s21_string.c $(LFLAGS) -o test
-	./test
+	-./test
 	lcov -t "test" -o test.info -c -d .
 	genhtml -o report test.info
 	open report/index.html
 	
 test: s21_string.a
 	gcc $(SYSFLAG) test.c -L. -ls21_string $(LFLAGS) -o test
-	./test
+	-./test > test.log
+	bash test_log.sh
 
 leaks: s21_string.a
 	gcc $(SYSFLAG) test.c -L. -ls21_string $(LFLAGS) -o test
-	$(LEAK) ./test
+	$(LEAK) -./test
 
 rebuild: clean gcov_report
 
 clean:
-	rm -f test libs21_string.a *.gc* test.info
+	rm -f test libs21_string.a *.gc* test.info log.xml test.log
 	rm -f -rf report

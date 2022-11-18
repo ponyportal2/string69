@@ -4,6 +4,8 @@
 #include <check.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
+#include <regex.h>
 #include "s21_string.h"
 
 #define SIZE 1024
@@ -29,16 +31,19 @@ struct test_struct {
     char* str1;
     char* str2;
     int c;
-    size_t n;
+    int n;
 };
 
 struct test_struct test[] = {
   {"123456789", "dgdfgdfg123", '5', 9}, 
-  {"\n", "\0", 'j', 10}, 
+  {"\n", "\0", 'j', 10},
   {"ABOB\nA", "dgdfgdfg123", '\n', 6}, 
   {"ere\0re", "\n\t\0", '8', 5}
 };
 
+int found_pattern(char *line, char* pattern);
+void print_error(char name_test[SIZE], int index);
+void print_log();
 void add_cases(TCase** tc, size_t index);
 Suite *create_str_suite(void);
 TCase *create_tc(size_t index);
