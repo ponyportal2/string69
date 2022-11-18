@@ -47,6 +47,10 @@ TCase *create_tc(size_t index);
 
 // ""
 // NULL
+// "a"
+// "\n"
+// "\t"
+// "\0"
 // "\n lorem \n\t ipsum \n"
 // "\n\0 lorem \n\t ipsum \n"
 // "\0\n lorem \n\t ipsum \n"
