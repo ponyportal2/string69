@@ -123,11 +123,11 @@ void varArgParsingAndAssignment(char currentFormatElem[8192],
   if (currentFormatElem[0] == 'i') {
     // [0] part is of course incorrect, properly parsed format
     // logic is needed here.
-    formatI(tempCurrentInputElem, varArgLoaded, currentVarArg);
+    assignI(tempCurrentInputElem, varArgLoaded, currentVarArg);
   }
 }
 
-void formatI(char inCurrentInputElem[8192], bool *varArgLoaded,
+void assignI(char inCurrentInputElem[8192], bool *varArgLoaded,
              void *currentVarArg) {
   if (currentVarArg != NULL) {
     *varArgLoaded = true;

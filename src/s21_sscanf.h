@@ -4,7 +4,7 @@
 
 int s21_sscanf(const char *input, const char *format, ...);
 void getNextElem(char *input, char elem[8192], int type);
-void formatI(char currentInputElem[8192], bool *varArgLoaded,
+void assignI(char currentInputElem[8192], bool *varArgLoaded,
              void *currentVarArg);
 void formatParsing(char formatStatic[16384], char currentFormatElem[8192],
                    bool *formatLoaded);
