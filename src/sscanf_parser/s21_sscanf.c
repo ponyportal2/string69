@@ -119,7 +119,7 @@ void formatParsing(char formatStatic[16384], char currentFormatElem[8192],
     sprintf(nextSym, "%c", *temp);
     if (strpbrk(nextSym, "cdieEfgGosuxXpn")) {
       (*Specif).Specif = *temp;
-      
+      temp++;
     } else {
       printf("error"); //тут типо ошибка при парсинге
     }
