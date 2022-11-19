@@ -191,16 +191,17 @@ START_TEST(strtok_test) {
 }
 END_TEST
 
-TCase *create_tc(size_t index) {
+TCase *create_tc(size_t index, size_t size) {
   TCase *tc = tcase_create(tcases[index].name);
   tcase_set_timeout(tc, 10);
-  add_cases(&tc, index);
+  add_cases(&tc, index, size);
   return tc;
 }
 
 void print_log() {
     FILE *f = fopen("log.xml","r");
     if (f != NULL) {
+      printf("\n");
       size_t len = 0;
       int found_err = 0, found_name = 0, iteration = 0;
     char *line = NULL;
@@ -247,10 +248,9 @@ int found_pattern(char *line, char *pattern) {
   return res;
 }
 
-void add_cases(TCase** tc, size_t index) {
-  size_t size = sizeof(test) / sizeof(test[0]);
+void add_cases(TCase** tc, size_t index, size_t size) {
   switch(index) {
-    case 0: tcase_add_loop_test(*tc, memchr_test, 0, size); break;
+    case 0: tcase_add_loop_test(*tc, memchr_test, 0, size); break; //leaks
     case 1: tcase_add_loop_test(*tc, memcmp_test, 0, size); break;
     case 2: tcase_add_loop_test(*tc, memcpy_test, 0, size); break;
     case 3: tcase_add_loop_test(*tc, memset_test, 0, size); break;
@@ -258,8 +258,8 @@ void add_cases(TCase** tc, size_t index) {
     case 5: tcase_add_loop_test(*tc, strcat_test, 0, size); break;
     case 6: tcase_add_loop_test(*tc, strncat_test, 0, size); break;
     case 7: tcase_add_loop_test(*tc, strchr_test, 0, size); break;
-    case 8: tcase_add_loop_test(*tc, strcmp_test, 0, size); break;
-    case 9: tcase_add_loop_test(*tc, strncmp_test, 0, size); break;
+    case 8: tcase_add_loop_test(*tc, strcmp_test, 0, size); break; //fails
+    case 9: tcase_add_loop_test(*tc, strncmp_test, 0, size); break; //fails
     case 10: tcase_add_loop_test(*tc, strcpy_test, 0, size); break;
     case 11: tcase_add_loop_test(*tc, strncpy_test, 0, size); break;
     case 12: tcase_add_loop_test(*tc, strcspn_test, 0, size); break;
@@ -274,22 +274,19 @@ void add_cases(TCase** tc, size_t index) {
   }
 }
 
-Suite *create_str_suite(void) {
+Suite *create_str_suite(size_t size_) {
   Suite *str_suite = suite_create("s21_string_test_suite");
   size_t size = sizeof(tcases) / sizeof(tcases[0]);
   for (size_t i = 0; i < size; i++) {
-    TCase *tc = create_tc(i);
+    TCase *tc = create_tc(i, size_);
     suite_add_tcase(str_suite, tc);
   }
   return str_suite;
 }
 
-list* add_elem(list* elem, char* str1, char* str2, int c, int n) {
+list* add_elem(list* elem, char* str1) {
   struct list* tmp = (list*) malloc(sizeof(list));
   tmp->str1 = str1;
-  tmp->str2 = str2;
-  tmp->c = c;
-  tmp->n = n;
   if (elem == NULL) {
     tmp->next = NULL;
     elem = tmp;
@@ -307,12 +304,12 @@ void destroy(list* root) {
     list *p = root;
     root = root->next;
     free(p->str1);
-    free(p->str2);
     free(p);
   }
 }
 
-list* set_tests(char* filename, list* tests_, list** tmp) {
+size_t set_test(char* filename, list** tmp) {
+  size_t size = START_STRUCT_SIZE;
   *tmp = set_params(filename, *tmp);
   FILE *f = fopen(filename, "rb");
   if (f != NULL) {
@@ -322,22 +319,22 @@ list* set_tests(char* filename, list* tests_, list** tmp) {
     while (read != -1) {
            list* p = *tmp;
            while (p != NULL) {
-            for (int i = MIN_C; i <= MAX_C; i++) {
-              for (int j = MIN_N; j <= MAX_N; j++) {
+           // for (int i = MIN_C; i <= MAX_C; i++) {
+             // for (int j = MIN_N; j <= MAX_N; j++) {
                   char* buf = strdup(line);
                   char* buf1 = strdup(p->str1);
-                  tests_ = add_elem(tests_, buf, buf1, i, j);
-                }
-            }
-                  p = p->next;
+                  test[size] = (struct test_struct){buf,buf1, 'p', 9};
+                  size++;
+              //  }
+           // }
+              p = p->next;
            }
       read = getline(&line, &len, f);
     }
     if (line) free(line); 
     fclose(f);
     }
-  
-  return tests_;
+  return size;
 }
 
 list* set_params(char* filename, list* tmp) {
@@ -348,31 +345,30 @@ list* set_params(char* filename, list* tmp) {
     ssize_t read = getline(&line, &len, f);
     while (read != -1) {
         char* buf = strdup(line);
-        char* buf1 = strdup(line);
-        tmp = add_elem(tmp, buf, buf1, 't', 8);
+        tmp = add_elem(tmp, buf);
         read = getline(&line, &len, f);
       }
       if (line) free(line);
       fclose(f);
     }
   return tmp;
+}
+
+void printAllCases(size_t size) {
+  printf("Cases\n");
+  for (size_t i = 0; i < size; i++) {
+    printf("case %ld: [%s],[%s],[%d],[%d]\n", i, test[i].str1,  test[i].str2,  test[i].c,  test[i].n);
+    printf("::::::::::::::::::::::::::::::::::\n");
   }
+  printf("\n");
+}
 
 int main(void) {
-  list* tests = NULL;
   list* tmp = NULL;
-  tests = set_tests("txt.txt", tests, &tmp);
-  list* p = tests;
-  int i = 0;
- while (p!= NULL) {
-  printf("case %d: {%s},{%s},{%d},{%d}\n", i, p->str1, p->str2, p->c, p->n);
-  printf("::::::::::::::::::::::::::::::::::\n");
-  p = p->next;
-  i++;
- }
-  destroy(tests);
-  destroy(tmp);
-  Suite *str_suite = create_str_suite();
+  size_t size = 0;
+  size = set_test(FILENAME, &tmp);
+  printAllCases(size);
+  Suite *str_suite = create_str_suite(size - 1);
   SRunner *suite_runner = srunner_create(str_suite);
   srunner_set_fork_status(suite_runner, CK_NOFORK);
   srunner_set_xml(suite_runner, "log.xml");
@@ -380,5 +376,6 @@ int main(void) {
   int failed_count = srunner_ntests_failed(suite_runner);
   if (failed_count != 0) print_log();
   srunner_free(suite_runner);
+  destroy(tmp);
   return EXIT_SUCCESS;
 }

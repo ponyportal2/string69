@@ -9,10 +9,13 @@
 #include "s21_string.h"
 
 #define SIZE 1024
-#define MAX_C 5
-#define MIN_C 0
-#define MAX_N 20
-#define MIN_N 0
+#define MAX_C 116
+#define MIN_C 115
+#define MAX_N 7
+#define MIN_N 6
+#define FILENAME "1.txt"
+#define START_STRUCT_SIZE 4
+
 struct tcase_ {
   const char* name;
 };
@@ -40,30 +43,27 @@ struct test_struct {
 
 typedef struct list {
     char* str1;
-    char* str2;
-    int c;
-    int n;
     struct list* next;
 }list;
 
-
-struct test_struct test[] = {
-  {"123456789", "dgdfgdfg123", '5', 9}, 
+struct test_struct test[SIZE] = {
+  {"shrek is shrek", "shrek is shrek", 's', 6}, 
   {"\n", "\0", 'j', 10},
   {"ABOB\nA", "dgdfgdfg123", '\n', 6}, 
   {"ere\0re", "\n\t\0", '8', 5}
 };
 
-list* set_tests(char* filename, list* tests_, list** tmp);
+void printAllCases(size_t size);
+size_t set_test(char* filename, list** tmp);
 list* set_params(char* filename, list* tests_);
-list* add_elem(list* elem, char* str1, char* str2, int c, int n);
+list* add_elem(list* elem, char* str1);
 void destroy(list* root);
 int found_pattern(char *line, char* pattern);
 void print_error(char name_test[SIZE], int index);
 void print_log();
-void add_cases(TCase** tc, size_t index);
-Suite *create_str_suite(void);
-TCase *create_tc(size_t index);
+void add_cases(TCase** tc, size_t index, size_t size);
+Suite *create_str_suite(size_t size);
+TCase *create_tc(size_t index, size_t size);
 
 // goodStringTestCases:
 

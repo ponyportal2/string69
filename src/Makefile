@@ -1,7 +1,7 @@
 UNAME:=$(shell uname -s)
 ifeq ($(UNAME),Linux)
 	LFLAGS=-lcheck -lsubunit -lrt -lm -lpthread
-	LEAK=valgrind --leak-check=full
+	LEAK=valgrind --leak-check=full --log-file="leak.log"
 	SYSFLAG=-D LINUX
 endif
 ifeq ($(UNAME),Darwin)
@@ -39,7 +39,8 @@ s21_string.a:
 
 gcov_report:
 	gcc $(GFLAGS) $(SYSFLAG) test.c s21_string.c $(LFLAGS) -o test
-	-./test
+	-./test > test.log
+	bash test_log.sh
 	lcov -t "test" -o test.info -c -d .
 	genhtml -o report test.info
 	open report/index.html
@@ -51,7 +52,9 @@ test: s21_string.a
 
 leaks: s21_string.a
 	gcc $(SYSFLAG) test.c -L. -ls21_string $(LFLAGS) -o test
-	$(LEAK) ./test
+	$(LEAK) ./test > test.log
+	bash test_leak.sh
+	bash test_log.sh
 
 rebuild: clean gcov_report
 
