@@ -284,8 +284,8 @@ Suite *create_str_suite(void) {
   return str_suite;
 }
 
-tests* add_test(tests* elem, char* str1, char* str2, int c, int n) {
-  struct tests* tmp = (tests*) malloc(sizeof(tests));
+list* add_elem(list* elem, char* str1, char* str2, int c, int n) {
+  struct list* tmp = (list*) malloc(sizeof(list));
   tmp->str1 = str1;
   tmp->str2 = str2;
   tmp->c = c;
@@ -294,7 +294,7 @@ tests* add_test(tests* elem, char* str1, char* str2, int c, int n) {
     tmp->next = NULL;
     elem = tmp;
   } else {
-    tests *p = elem;
+    list *p = elem;
     while (p->next != NULL) p = p->next;
     p->next = tmp;
     tmp->next = NULL;
@@ -302,66 +302,76 @@ tests* add_test(tests* elem, char* str1, char* str2, int c, int n) {
   return elem;
 }
 
-void destroy(tests* root) {
+void destroy(list* root) {
   while (root != NULL) {
-    tests *p = root;
+    list *p = root;
     root = root->next;
-    //free(p->str1);
-    //free(p->str2);
+    free(p->str1);
+    free(p->str2);
     free(p);
   }
 }
 
-tests* set_tests(char* filename, tests* tests_) {
+list* set_tests(char* filename, list* tests_, list** tmp) {
+  *tmp = set_params(filename, *tmp);
   FILE *f = fopen(filename, "rb");
   if (f != NULL) {
     size_t len = 0;
     char *line = NULL;
     ssize_t read = getline(&line, &len, f);
-    char name[SIZE] = "", num[SIZE] = "";
     while (read != -1) {
-      //tests_ = set_params(filename, tests_, line);
-      // for (int i = 0; i <= 255; i++) {
-      //  for (int j = 0; j <= 20; j++) {
-            tests_ = add_test(tests_, line, line, '7', 3);
-       // }
-      //}
+           list* p = *tmp;
+           while (p != NULL) {
+            for (int i = MIN_C; i <= MAX_C; i++) {
+              for (int j = MIN_N; j <= MAX_N; j++) {
+                  char* buf = strdup(line);
+                  char* buf1 = strdup(p->str1);
+                  tests_ = add_elem(tests_, buf, buf1, i, j);
+                }
+            }
+                  p = p->next;
+           }
       read = getline(&line, &len, f);
     }
-    //if (line) free(line); bruh
+    if (line) free(line); 
     fclose(f);
-  }
+    }
   
   return tests_;
 }
 
-tests* set_params(char* filename, tests* tests_, char* line1) {
+list* set_params(char* filename, list* tmp) {
   FILE *f = fopen(filename, "rb");
   if (f != NULL) {
     size_t len = 0;
-    int found_err = 0, found_name = 0, iteration = 0;
     char *line = NULL;
     ssize_t read = getline(&line, &len, f);
-    char name[SIZE] = "", num[SIZE] = "";
     while (read != -1) {
-      for (int i = 0; i <= 255; i++) {
-        for (int j = 0; j <= 20; j++) {
-          tests_ = add_test(tests_, line1, line, i, j);
-        }
+        char* buf = strdup(line);
+        char* buf1 = strdup(line);
+        tmp = add_elem(tmp, buf, buf1, 't', 8);
+        read = getline(&line, &len, f);
       }
-      read = getline(&line, &len, f);
+      if (line) free(line);
+      fclose(f);
     }
-    //if (line) free(line);
-    fclose(f);
+  return tmp;
   }
-  return tests_;
-}
 
 int main(void) {
-  //char * f = "goodTestCases/goodTestCases.txt";
-  tests* tests_ = NULL;
-  tests_ = set_tests("txt.txt", tests_);
-  destroy(tests_);
+  list* tests = NULL;
+  list* tmp = NULL;
+  tests = set_tests("txt.txt", tests, &tmp);
+  list* p = tests;
+  int i = 0;
+ while (p!= NULL) {
+  printf("case %d: {%s},{%s},{%d},{%d}\n", i, p->str1, p->str2, p->c, p->n);
+  printf("::::::::::::::::::::::::::::::::::\n");
+  p = p->next;
+  i++;
+ }
+  destroy(tests);
+  destroy(tmp);
   Suite *str_suite = create_str_suite();
   SRunner *suite_runner = srunner_create(str_suite);
   srunner_set_fork_status(suite_runner, CK_NOFORK);

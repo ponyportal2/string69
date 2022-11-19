@@ -9,7 +9,10 @@
 #include "s21_string.h"
 
 #define SIZE 1024
-
+#define MAX_C 5
+#define MIN_C 0
+#define MAX_N 20
+#define MIN_N 0
 struct tcase_ {
   const char* name;
 };
@@ -35,13 +38,14 @@ struct test_struct {
     int n;
 };
 
-typedef struct tests {
+typedef struct list {
     char* str1;
     char* str2;
     int c;
     int n;
-    struct tests* next;
-}tests;
+    struct list* next;
+}list;
+
 
 struct test_struct test[] = {
   {"123456789", "dgdfgdfg123", '5', 9}, 
@@ -50,10 +54,10 @@ struct test_struct test[] = {
   {"ere\0re", "\n\t\0", '8', 5}
 };
 
-tests* set_tests(char* filename, tests* tests_);
-tests* set_params(char* filename, tests* tests_, char* line1);
-tests* add_test(tests* elem, char* str1, char* str2, int c, int n);
-void destroy(tests* root);
+list* set_tests(char* filename, list* tests_, list** tmp);
+list* set_params(char* filename, list* tests_);
+list* add_elem(list* elem, char* str1, char* str2, int c, int n);
+void destroy(list* root);
 int found_pattern(char *line, char* pattern);
 void print_error(char name_test[SIZE], int index);
 void print_log();
