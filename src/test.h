@@ -24,7 +24,8 @@ struct tcase_ tcases[] = {
   "strcspn_tc", "strerror_tc",
   "strlen_tc", "strpbrk_tc",
   "strrchr_tc", "strspn_tc",
-  "strstr_tc", "strtok_tc"
+  "strstr_tc", "strtok_tc",
+  "strspn_tc"
 };
 
 struct test_struct {
@@ -34,6 +35,14 @@ struct test_struct {
     int n;
 };
 
+typedef struct tests {
+    char* str1;
+    char* str2;
+    int c;
+    int n;
+    struct tests* next;
+}tests;
+
 struct test_struct test[] = {
   {"123456789", "dgdfgdfg123", '5', 9}, 
   {"\n", "\0", 'j', 10},
@@ -41,6 +50,10 @@ struct test_struct test[] = {
   {"ere\0re", "\n\t\0", '8', 5}
 };
 
+tests* set_tests(char* filename, tests* tests_);
+tests* set_params(char* filename, tests* tests_, char* line1);
+tests* add_test(tests* elem, char* str1, char* str2, int c, int n);
+void destroy(tests* root);
 int found_pattern(char *line, char* pattern);
 void print_error(char name_test[SIZE], int index);
 void print_log();

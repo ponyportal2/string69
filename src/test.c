@@ -284,7 +284,84 @@ Suite *create_str_suite(void) {
   return str_suite;
 }
 
+tests* add_test(tests* elem, char* str1, char* str2, int c, int n) {
+  struct tests* tmp = (tests*) malloc(sizeof(tests));
+  tmp->str1 = str1;
+  tmp->str2 = str2;
+  tmp->c = c;
+  tmp->n = n;
+  if (elem == NULL) {
+    tmp->next = NULL;
+    elem = tmp;
+  } else {
+    tests *p = elem;
+    while (p->next != NULL) p = p->next;
+    p->next = tmp;
+    tmp->next = NULL;
+  }
+  return elem;
+}
+
+void destroy(tests* root) {
+  while (root != NULL) {
+    tests *p = root;
+    root = root->next;
+    //free(p->str1);
+    //free(p->str2);
+    free(p);
+  }
+}
+
+tests* set_tests(char* filename, tests* tests_) {
+  FILE *f = fopen(filename, "rb");
+  if (f != NULL) {
+    size_t len = 0;
+    char *line = NULL;
+    ssize_t read = getline(&line, &len, f);
+    char name[SIZE] = "", num[SIZE] = "";
+    while (read != -1) {
+      //tests_ = set_params(filename, tests_, line);
+      // for (int i = 0; i <= 255; i++) {
+      //  for (int j = 0; j <= 20; j++) {
+            tests_ = add_test(tests_, line, line, '7', 3);
+       // }
+      //}
+      read = getline(&line, &len, f);
+    }
+    //if (line) free(line); bruh
+    fclose(f);
+  }
+  
+  return tests_;
+}
+
+tests* set_params(char* filename, tests* tests_, char* line1) {
+  FILE *f = fopen(filename, "rb");
+  if (f != NULL) {
+    size_t len = 0;
+    int found_err = 0, found_name = 0, iteration = 0;
+    char *line = NULL;
+    ssize_t read = getline(&line, &len, f);
+    char name[SIZE] = "", num[SIZE] = "";
+    while (read != -1) {
+      for (int i = 0; i <= 255; i++) {
+        for (int j = 0; j <= 20; j++) {
+          tests_ = add_test(tests_, line1, line, i, j);
+        }
+      }
+      read = getline(&line, &len, f);
+    }
+    //if (line) free(line);
+    fclose(f);
+  }
+  return tests_;
+}
+
 int main(void) {
+  //char * f = "goodTestCases/goodTestCases.txt";
+  tests* tests_ = NULL;
+  tests_ = set_tests("txt.txt", tests_);
+  destroy(tests_);
   Suite *str_suite = create_str_suite();
   SRunner *suite_runner = srunner_create(str_suite);
   srunner_set_fork_status(suite_runner, CK_NOFORK);
