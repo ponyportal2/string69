@@ -153,6 +153,8 @@ char *strtokChop(char *str, const char *delim, char *leftOver) {
       }
     }
   }
+
+  // right chop goes into leftOver:
   if (new_str != NULL) {
     strcpy(leftOver, new_str);
   } else {  // if return is NULL then we fill with "error" string
@@ -162,23 +164,23 @@ char *strtokChop(char *str, const char *delim, char *leftOver) {
   return tmp;  // возвращаем строку до зануленного разделителя
 }
 
-void inputParsing(char inputStatic[16384], char currentInputElem[8192], int wid,
+void inputParsing(char inputFlip[16384], char currentInputElem[8192], int wid,
                   bool *inputLoaded) {
   static bool flipFlop = false;
-  static char leftOver[16384] = {0};
+  static char inputFlop[16384] = {0};
   if (wid == -1) {
     if (flipFlop == false) {
-      strcpy(currentInputElem, strtokChop(inputStatic, "\n \t", leftOver));
+      strcpy(currentInputElem, strtokChop(inputFlip, "\n \t", inputFlop));
       flipFlop = true;
     } else if (flipFlop == true) {
-      strcpy(currentInputElem, strtokChop(leftOver, "\n \t", inputStatic));
+      strcpy(currentInputElem, strtokChop(inputFlop, "\n \t", inputFlip));
       flipFlop = false;
     }
   } else {
     if (flipFlop == false) {
-      fillOneByOne(inputStatic, currentInputElem, wid);
+      fillOneByOne(inputFlip, currentInputElem, wid);
     } else if (flipFlop == true) {
-      fillOneByOne(leftOver, currentInputElem, wid);
+      fillOneByOne(inputFlop, currentInputElem, wid);
     }
   }
   if (strcmp(currentInputElem, OUR_ERROR_) != 0) {
