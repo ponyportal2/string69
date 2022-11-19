@@ -13,6 +13,7 @@ void inputParsing(char inputStatic[16384], char currentInputElem[8192],
 void varArgParsingAndAssignment(char currentFormatElem[8192],
                                 char currentInputElem[8192], bool *varArgLoaded,
                                 void *currentVarArg);
+char *s21_strtok_clone(char *str, const char *delim);
 
 // Спецификатор формата для сканирующих функций следует прототипу:
 // %[*][ширина][длина]спецификатор.

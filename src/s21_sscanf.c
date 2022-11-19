@@ -19,8 +19,8 @@ int s21_sscanf(const char *input, const char *format, ...) {
   va_list args;
   va_start(args, format);
 
-  char inputStatic[16384] = {0};   // local copy of whole "input" parameter
-  char formatStatic[16384] = {0};  // local copy of whole "format" parameter
+  char inputStatic[16384] = {0};  // local copy of whole "input" parameter
+  char formatStatic[16384] = {0}; // local copy of whole "format" parameter
   strcpy(inputStatic, input);
   strcpy(formatStatic, format);
 
@@ -34,8 +34,10 @@ int s21_sscanf(const char *input, const char *format, ...) {
     bool varArgLoaded = false;
     // CURRENT FORMAT ELEMENT PARSING:
     formatParsing(formatStatic, currentFormatElem, &formatLoaded);
+    // printf("\n[%s]\n", currentFormatElem);
     // CURRENT INPUT ELEMENT PARSING:
     inputParsing(inputStatic, currentInputElem, &inputLoaded);
+    // printf("\n[%s]\n", currentInputElem);
     // CURRENT VARARG ELEMENT PARSING:
     varArgParsingAndAssignment(currentFormatElem, currentInputElem,
                                &varArgLoaded, va_arg(args, void *));
@@ -49,44 +51,48 @@ int s21_sscanf(const char *input, const char *format, ...) {
     }
   }
   va_end(args);
-  return 800815;  // to fix, I don't know what sscanf should return and why
+  return 800815; // to fix, I don't know what sscanf should return and why
 }
 
 void getNextElem(char *input, char elem[8192], int type) {
   char *returnStr = NULL;
-  static bool isInputInitilized = false, isFormatInitilized = false;
-  char *currentInputPtr = NULL, *currentFormatPtr = NULL;
+  static bool isInputInitilized = false;
+  static bool isFormatInitilized = false;
+  // char *currentInputPtr = NULL, *currentFormatPtr = NULL;
+  char *currentInputString = NULL, *currentFormatString = NULL;
   char inputDelims[] = {'\t', 32, '\n'};
   char formatDelims[] = "%";
 
   switch (type) {
-    case INPUD_:
-      if (isInputInitilized) {
-        currentInputPtr = strtok_r(NULL, inputDelims, &currentInputPtr);
-        break;
-      } else {  // if not initialized - then initialize
-        currentInputPtr = strtok_r(input, inputDelims, &currentInputPtr);
-        break;
-      }
-    case FORMAD_:
-      if (isFormatInitilized) {
-        currentFormatPtr = strtok_r(NULL, formatDelims, &currentFormatPtr);
-        break;
-      } else {  // if not initialized - then initialize
-        currentFormatPtr = strtok_r(input, formatDelims, &currentFormatPtr);
-        break;
-      }
+  case INPUD_:
+    if (isInputInitilized) {
+      currentInputString = strtok(NULL, inputDelims);
+      break;
+    } else { // if not initialized - then initialize
+      currentInputString = strtok(input, inputDelims);
+      isInputInitilized = true;
+      break;
+    }
+  case FORMAD_:
+    if (isFormatInitilized) {
+      currentFormatString = s21_strtok_clone(NULL, formatDelims);
+      break;
+    } else { // if not initialized - then initialize
+      currentFormatString = s21_strtok_clone(input, formatDelims);
+      isFormatInitilized = true;
+      break;
+    }
   }
 
   if (type == INPUD_) {
-    returnStr = currentInputPtr;
+    returnStr = currentInputString;
   } else if (type == FORMAD_) {
-    returnStr = currentFormatPtr;
+    returnStr = currentFormatString;
   }
 
   if (returnStr != NULL) {
     strcpy(elem, returnStr);
-  } else {  // if return is NULL then we return "error" string
+  } else { // if return is NULL then we return "error" string
     strcpy(elem, OUR_ERROR_);
   }
 }
@@ -135,6 +141,38 @@ void assignI(char inCurrentInputElem[8192], bool *varArgLoaded,
   } else {
     *varArgLoaded = false;
   }
+}
+
+char *s21_strtok_clone(char *str, const char *delim) {
+  static char *new_str;
+  char *tmp = str;
+  int check = 1;
+  if (str != NULL) {
+    new_str = str;
+  } else if (!new_str) { //если строка закончилась, возвращаем 0
+    tmp = 0;
+    check = 0;
+  }
+  if (check != 0) {
+    size_t check1 = s21_strspn(new_str, delim); // есть ли сейчас разделитель
+
+    str = new_str + check1; // перепрыгиваем разделитель
+    tmp = new_str + check1;
+    size_t check2 = s21_strcspn(str, delim); // длина до следующего разделителя
+    new_str = str + check2; // перепрыгиваем до следующего разделителя
+    if (new_str == str) { // для случая когда стартовая строка пустая
+      tmp = 0;
+      new_str = 0;
+    } else {
+      if (*new_str != 0) { // зануляем разделитель
+        *new_str = 0;
+        new_str++;
+      } else {
+        new_str = NULL; // если строка закончилась то NULL
+      }
+    }
+  }
+  return tmp; // возвращаем строку до зануленного разделителя
 }
 
 // shrakmer: тут я хомячу код потому что мне так удобно, в конце удалим:
