@@ -7,7 +7,7 @@
 #define INPUD_ 1
 #define FORMAD_ 2
 
-#define OUR_ERROR_ "KufLv91ySdu64DYPiXOH"
+#define OUR_ERROR_ "KufLv91ySdu64DYPiXOHGx5Jj9Q2eKcYwnrjxhQG"
 
 #define MISMADCH_ 1
 #define ENDET_ 2
