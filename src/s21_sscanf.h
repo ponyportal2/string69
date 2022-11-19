@@ -3,17 +3,21 @@
 #include "s21_string.h"
 
 int s21_sscanf(const char *input, const char *format, ...);
-void getNextElem(char *input, char elem[8192], int type);
+void getNextFormatElem(char *input, char elem[8192]);
 void assignI(char currentInputElem[8192], bool *varArgLoaded,
+             void *currentVarArg);
+void assignS(char currentInputElem[8192], bool *varArgLoaded,
              void *currentVarArg);
 void formatParsing(char formatStatic[16384], char currentFormatElem[8192],
                    bool *formatLoaded);
-void inputParsing(char inputStatic[16384], char currentInputElem[8192],
+void inputParsing(char inputStatic[16384], char currentInputElem[8192], int wid,
                   bool *inputLoaded);
 void varArgParsingAndAssignment(char currentFormatElem[8192],
                                 char currentInputElem[8192], bool *varArgLoaded,
                                 void *currentVarArg);
-char *s21_strtok_clone(char *str, const char *delim);
+char *strtokChop(char *str, const char *delim, char *leftOver);
+void fillOneByOne(char input[16384], char currentInputElem[8192], int wid);
+void chopLeft(char input[16384], int howMany);
 
 // Спецификатор формата для сканирующих функций следует прототипу:
 // %[*][ширина][длина]спецификатор.

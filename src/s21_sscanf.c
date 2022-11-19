@@ -4,9 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define INPUD_ 1
-#define FORMAD_ 2
-
 #define OUR_ERROR_ "KufLv91ySdu64DYPiXOHGx5Jj9Q2eKcYwnrjxhQG"
 
 #define MISMADCH_ 1
@@ -19,8 +16,8 @@ int s21_sscanf(const char *input, const char *format, ...) {
   va_list args;
   va_start(args, format);
 
-  char inputStatic[16384] = {0};  // local copy of whole "input" parameter
-  char formatStatic[16384] = {0}; // local copy of whole "format" parameter
+  char inputStatic[16384] = {0};   // local copy of whole "input" parameter
+  char formatStatic[16384] = {0};  // local copy of whole "format" parameter
   strcpy(inputStatic, input);
   strcpy(formatStatic, format);
 
@@ -35,9 +32,11 @@ int s21_sscanf(const char *input, const char *format, ...) {
     // CURRENT FORMAT ELEMENT PARSING:
     formatParsing(formatStatic, currentFormatElem, &formatLoaded);
     // printf("\n[%s]\n", currentFormatElem);
+
     // CURRENT INPUT ELEMENT PARSING:
-    inputParsing(inputStatic, currentInputElem, &inputLoaded);
+    inputParsing(inputStatic, currentInputElem, 3, &inputLoaded);
     // printf("\n[%s]\n", currentInputElem);
+
     // CURRENT VARARG ELEMENT PARSING:
     varArgParsingAndAssignment(currentFormatElem, currentInputElem,
                                &varArgLoaded, va_arg(args, void *));
@@ -51,67 +50,38 @@ int s21_sscanf(const char *input, const char *format, ...) {
     }
   }
   va_end(args);
-  return 800815; // to fix, I don't know what sscanf should return and why
+  return 800815;  // to fix, I don't know what sscanf should return and why
 }
 
-void getNextElem(char *input, char elem[8192], int type) {
+void getNextFormatElem(char *input, char elem[8192]) {
   char *returnStr = NULL;
-  static bool isInputInitilized = false;
   static bool isFormatInitilized = false;
-  // char *currentInputPtr = NULL, *currentFormatPtr = NULL;
-  char *currentInputString = NULL, *currentFormatString = NULL;
-  char inputDelims[] = {'\t', 32, '\n'};
+  char *currentFormatString = NULL;
   char formatDelims[] = "%";
 
-  switch (type) {
-  case INPUD_:
-    if (isInputInitilized) {
-      currentInputString = strtok(NULL, inputDelims);
-      break;
-    } else { // if not initialized - then initialize
-      currentInputString = strtok(input, inputDelims);
-      isInputInitilized = true;
-      break;
-    }
-  case FORMAD_:
-    if (isFormatInitilized) {
-      currentFormatString = s21_strtok_clone(NULL, formatDelims);
-      break;
-    } else { // if not initialized - then initialize
-      currentFormatString = s21_strtok_clone(input, formatDelims);
-      isFormatInitilized = true;
-      break;
-    }
+  if (isFormatInitilized) {
+    currentFormatString = strtok(NULL, formatDelims);
+  } else {  // if not initialized - then initialize
+    currentFormatString = strtok(input, formatDelims);
+    isFormatInitilized = true;
   }
 
-  if (type == INPUD_) {
-    returnStr = currentInputString;
-  } else if (type == FORMAD_) {
-    returnStr = currentFormatString;
-  }
+  returnStr = currentFormatString;
 
   if (returnStr != NULL) {
     strcpy(elem, returnStr);
-  } else { // if return is NULL then we return "error" string
+  } else {  // if return is NULL then we return "error" string
     strcpy(elem, OUR_ERROR_);
   }
 }
 
 void formatParsing(char formatStatic[16384], char currentFormatElem[8192],
                    bool *formatLoaded) {
-  getNextElem(formatStatic, currentFormatElem, FORMAD_);
+  getNextFormatElem(formatStatic, currentFormatElem);
   if (strcmp(currentFormatElem, OUR_ERROR_) != 0) {
     *formatLoaded = true;
     // parsing current format element. worst case, something like this:
     // "*6hhi"
-  }
-}
-
-void inputParsing(char inputStatic[16384], char currentInputElem[8192],
-                  bool *inputLoaded) {
-  getNextElem(inputStatic, currentInputElem, INPUD_);
-  if (strcmp(currentInputElem, OUR_ERROR_) != 0) {
-    *inputLoaded = true;
   }
 }
 
@@ -124,12 +94,13 @@ void varArgParsingAndAssignment(char currentFormatElem[8192],
 
   // needed, cause passing static arrays too deep breaks them for some reason:
   char tempCurrentInputElem[8192] = {0};
-
   strcpy(tempCurrentInputElem, currentInputElem);
   if (currentFormatElem[0] == 'i') {
     // [0] part is of course incorrect, properly parsed format
     // logic is needed here.
     assignI(tempCurrentInputElem, varArgLoaded, currentVarArg);
+  } else if (currentFormatElem[0] == 's') {
+    assignS(tempCurrentInputElem, varArgLoaded, currentVarArg);
   }
 }
 
@@ -143,40 +114,130 @@ void assignI(char inCurrentInputElem[8192], bool *varArgLoaded,
   }
 }
 
-char *s21_strtok_clone(char *str, const char *delim) {
+void assignS(char currentInputElem[8192], bool *varArgLoaded,
+             void *currentVarArg) {
+  if (currentVarArg != NULL) {
+    *varArgLoaded = true;
+    strcpy(currentVarArg, currentInputElem);
+  } else {
+    *varArgLoaded = false;
+  }
+}
+
+char *strtokChop(char *str, const char *delim, char *leftOver) {
   static char *new_str;
   char *tmp = str;
   int check = 1;
   if (str != NULL) {
     new_str = str;
-  } else if (!new_str) { //если строка закончилась, возвращаем 0
+  } else if (!new_str) {  //если строка закончилась, возвращаем 0
     tmp = 0;
     check = 0;
   }
   if (check != 0) {
-    size_t check1 = s21_strspn(new_str, delim); // есть ли сейчас разделитель
+    size_t check1 = s21_strspn(new_str, delim);  // есть ли сейчас разделитель
 
-    str = new_str + check1; // перепрыгиваем разделитель
+    str = new_str + check1;  // перепрыгиваем разделитель
     tmp = new_str + check1;
-    size_t check2 = s21_strcspn(str, delim); // длина до следующего разделителя
-    new_str = str + check2; // перепрыгиваем до следующего разделителя
-    if (new_str == str) { // для случая когда стартовая строка пустая
+    size_t check2 = s21_strcspn(str, delim);  // длина до следующего разделителя
+    new_str = str + check2;  // перепрыгиваем до следующего разделителя
+    if (new_str == str) {  // для случая когда стартовая строка пустая
       tmp = 0;
       new_str = 0;
     } else {
-      if (*new_str != 0) { // зануляем разделитель
+      if (*new_str != 0) {  // зануляем разделитель
         *new_str = 0;
         new_str++;
       } else {
-        new_str = NULL; // если строка закончилась то NULL
+        new_str = NULL;  // если строка закончилась то NULL
       }
     }
   }
-  return tmp; // возвращаем строку до зануленного разделителя
+  if (new_str != NULL) {
+    strcpy(leftOver, new_str);
+  } else {  // if return is NULL then we fill with "error" string
+    strcpy(leftOver, OUR_ERROR_);
+  }
+
+  return tmp;  // возвращаем строку до зануленного разделителя
+}
+
+void inputParsing(char inputStatic[16384], char currentInputElem[8192], int wid,
+                  bool *inputLoaded) {
+  static bool flipFlop = false;
+  static char leftOver[16384] = {0};
+  if (wid == -1) {
+    if (flipFlop == false) {
+      strcpy(currentInputElem, strtokChop(inputStatic, "\n \t", leftOver));
+      flipFlop = true;
+    } else if (flipFlop == true) {
+      strcpy(currentInputElem, strtokChop(leftOver, "\n \t", inputStatic));
+      flipFlop = false;
+    }
+  } else {
+    if (flipFlop == false) {
+      fillOneByOne(inputStatic, currentInputElem, wid);
+    } else if (flipFlop == true) {
+      fillOneByOne(leftOver, currentInputElem, wid);
+    }
+  }
+  if (strcmp(currentInputElem, OUR_ERROR_) != 0) {
+    *inputLoaded = true;
+  }
+}
+
+void fillOneByOne(char input[16384], char currentInputElem[8192], int wid) {
+  int i = 0;
+  int j = 0;
+  while (input[i] != '\0' && j < wid) {
+    if (s21_match("\t \n", input[i]) == false) {
+      currentInputElem[j] = input[i];
+      j++;
+    }
+    i++;
+  }
+  currentInputElem[j] = '\0';
+  chopLeft(input, i);
+}
+
+void chopLeft(char input[16384], int howMany) {
+  int j = 0;
+  for (int i = howMany; input[i] != '\0'; i++, j++) {
+    input[j] = input[i];
+  }
+  input[j] = '\0';
 }
 
 // shrakmer: тут я хомячу код потому что мне так удобно, в конце удалим:
 // ---------------------------------------------------------------------
+
+// printf("inputStatic: %s\n", inputStatic);
+// printf("leftover: %s\n", leftOver);
+// printf("curInputElem: %s\n", currentInputElem);
+
+// printf("%s", input);
+
+// void chopLeft(char input[16384], int howMany) {
+//   int j = 0;
+//   for (int i = howMany; (i < (howMany * 2)) && (input[i] != '\0'); i++, j++)
+//   {
+//     input[j] = input[i];
+//   }
+//   input[j] = '\0';
+//   printf("%s", input);
+// }
+
+// printf("curIElem: %s\n", currentInputElem);
+// printf("curIElem: %s\n", tempCurrentInputElem);
+// printf("curFElem: %s\n", currentFormatElem);
+
+// void inputParsing(char inputStatic[16384], char currentInputElem[8192],
+//                   bool *inputLoaded) {
+//   getNextElemWithStrtok(inputStatic, currentInputElem, INPUD_);
+//   if (strcmp(currentInputElem, OUR_ERROR_) != 0) {
+//     *inputLoaded = true;
+//   }
+// }
 
 // printf("currentFormatElem:[%s]\n", currentFormatElem);
 
