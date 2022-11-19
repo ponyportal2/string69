@@ -11,14 +11,14 @@ struct Specificators {
 int s21_sscanf(const char *input, const char *format, ...);
 void getNextElem(char *input, char elem[8192], int type);
 void assignI(char currentInputElem[8192], bool *varArgLoaded,
-             void *currentVarArg);
+             void *currentVarArg, struct Specificators Specif);
 void formatParsing(char formatStatic[16384], char currentFormatElem[8192],
                    bool *formatLoaded, struct Specificators *Specif);
 void inputParsing(char inputStatic[16384], char currentInputElem[8192],
-                  bool *inputLoaded);
+                  bool *inputLoaded, struct Specificators Specif);
 void varArgParsingAndAssignment(char currentFormatElem[8192],
                                 char currentInputElem[8192], bool *varArgLoaded,
-                                void *currentVarArg);
+                                void *currentVarArg, struct Specificators Specif);
 
 // Спецификатор формата для сканирующих функций следует прототипу:
 // %[*][ширина][длина]спецификатор.

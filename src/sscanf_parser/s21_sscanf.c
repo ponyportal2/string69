@@ -38,11 +38,14 @@ int s21_sscanf(const char *input, const char *format, ...) {
     struct Specificators Specif = {-1, -1, (char)NULL, (char)NULL};
     // CURRENT FORMAT ELEMENT PARSING:
     formatParsing(formatStatic, currentFormatElem, &formatLoaded, &Specif);
+    
     // CURRENT INPUT ELEMENT PARSING:
-    inputParsing(inputStatic, currentInputElem, &inputLoaded);
+    inputParsing(inputStatic, currentInputElem, &inputLoaded, Specif);
+
     // CURRENT VARARG ELEMENT PARSING:
     varArgParsingAndAssignment(currentFormatElem, currentInputElem,
-                               &varArgLoaded, va_arg(args, void *));
+                               &varArgLoaded, va_arg(args, void *), Specif);
+                               
     // -------------------------------
     if (formatLoaded == false && inputLoaded == false &&
         varArgLoaded == false) {
@@ -62,22 +65,26 @@ void getNextElem(char *input, char elem[8192], int type) {
   char *currentInputPtr = NULL, *currentFormatPtr = NULL;
   char inputDelims[] = {'\t', 32, '\n'};
   char formatDelims[] = "%";
-
   switch (type) {
     case INPUD_:
       if (isInputInitilized) {
-        currentInputPtr = strtok_r(NULL, inputDelims, &currentInputPtr);
+        currentInputPtr = strtok(NULL, inputDelims);
+
+    
         break;
-      } else {  // if not initialized - then initialize
-        currentInputPtr = strtok_r(input, inputDelims, &currentInputPtr);
+      } else {  // if not initialized - then initializ
+        currentInputPtr = strtok(input, inputDelims);
+        isInputInitilized = true;
         break;
       }
     case FORMAD_:
       if (isFormatInitilized) {
-        currentFormatPtr = strtok_r(NULL, formatDelims, &currentFormatPtr);
+        currentFormatPtr = s21_strtok(NULL, formatDelims);
         break;
       } else {  // if not initialized - then initialize
-        currentFormatPtr = strtok_r(input, formatDelims, &currentFormatPtr);
+        
+        currentFormatPtr = s21_strtok(input, formatDelims);
+        isFormatInitilized = true;
         break;
       }
   }
@@ -130,8 +137,15 @@ void formatParsing(char formatStatic[16384], char currentFormatElem[8192],
 }
 
 void inputParsing(char inputStatic[16384], char currentInputElem[8192],
-                  bool *inputLoaded) {
-  getNextElem(inputStatic, currentInputElem, INPUD_);
+                  bool *inputLoaded, struct Specificators Specif) {
+  if (Specif.width == -1 && Specif.argWidth == -1) {
+    getNextElem(inputStatic, currentInputElem, INPUD_);
+  } else {
+    
+    memmove(currentInputElem, inputStatic, Specif.width);
+    char *temp = inputStatic + Specif.width;
+    strcpy(inputStatic, temp);
+  }
   if (strcmp(currentInputElem, OUR_ERROR_) != 0) {
     *inputLoaded = true;
   }
@@ -139,7 +153,7 @@ void inputParsing(char inputStatic[16384], char currentInputElem[8192],
 
 void varArgParsingAndAssignment(char currentFormatElem[8192],
                                 char currentInputElem[8192], bool *varArgLoaded,
-                                void *currentVarArg) {
+                                void *currentVarArg, struct Specificators Specif) {
   // here we will need to get a var arg based on currentFormatElem and set it
   // through a pointer to what we parsed from currentInputElem.
   // See formatI for a not perfect example
@@ -151,15 +165,25 @@ void varArgParsingAndAssignment(char currentFormatElem[8192],
   
     // [0] part is of course incorrect, properly parsed format
     // logic is needed here.
-    assignI(tempCurrentInputElem, varArgLoaded, currentVarArg);
+    assignI(tempCurrentInputElem, varArgLoaded, currentVarArg, Specif);
   
 }
 
 void assignI(char inCurrentInputElem[8192], bool *varArgLoaded,
-             void *currentVarArg) {
+             void *currentVarArg, struct Specificators Specif) {
+              
   if (currentVarArg != NULL) {
     *varArgLoaded = true;
-    *((int *)currentVarArg) = atoi(inCurrentInputElem);
+    if (Specif.Specif == 's') {
+      if (inCurrentInputElem[strlen(inCurrentInputElem) - 1] == ' ') { //тут надо все delims проверять
+        inCurrentInputElem[strlen(inCurrentInputElem) - 1] = '\0';
+      }
+      strcpy(currentVarArg, inCurrentInputElem);
+      
+    } else {
+      *((int*)currentVarArg) = atoi(inCurrentInputElem);
+    }
+    
   } else {
     *varArgLoaded = false;
   }
