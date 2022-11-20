@@ -9,16 +9,31 @@ struct Specificators {
 };
 
 int s21_sscanf(const char *input, const char *format, ...);
-void getNextElem(char *input, char elem[8192], int type);
+void getNextFormatElem(char *input, char elem[8192]);
 void assignI(char currentInputElem[8192], bool *varArgLoaded,
-             void *currentVarArg, struct Specificators Specif);
+             void *currentVarArg);
+void assignS(char currentInputElem[8192], bool *varArgLoaded,
+             void *currentVarArg);
+void assignF(char inCurrentInputElem[8192], bool *varArgLoaded,
+             void *currentVarArg);
+void assignD(char inCurrentInputElem[8192], bool *varArgLoaded,
+             void *currentVarArg);
+void assignI(char inCurrentInputElem[8192], bool *varArgLoaded,
+             void *currentVarArg);          
 void formatParsing(char formatStatic[16384], char currentFormatElem[8192],
                    bool *formatLoaded, struct Specificators *Specif);
-void inputParsing(char inputStatic[16384], char currentInputElem[8192],
-                  bool *inputLoaded, struct Specificators Specif);
+void checkFormatError (struct Specificators Specif);
+void ifSpecIsD(struct Specificators *Specif, char inputStatic[16384]);
+void ifSpecIsI(struct Specificators *Specif, char inputStatic[16384]);
+void ifSpecIsF(struct Specificators *Specif, char inputStatic[16384]);
+void inputParsing(char inputStatic[16384], char currentInputElem[8192], int wid,
+                  bool *inputLoaded);
 void varArgParsingAndAssignment(char currentFormatElem[8192],
                                 char currentInputElem[8192], bool *varArgLoaded,
                                 void *currentVarArg, struct Specificators Specif);
+char *strtokChop(char *str, const char *delim, char *leftOver);
+void fillOneByOne(char input[16384], char currentInputElem[8192], int wid);
+void chopLeft(char input[16384], int howMany);
 
 // Спецификатор формата для сканирующих функций следует прототипу:
 // %[*][ширина][длина]спецификатор.

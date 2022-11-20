@@ -4,16 +4,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define INPUD_ 1
-#define FORMAD_ 2
-
-#define OUR_ERROR_ "KufLv91ySdu64DYPiXOH"
+#define OUR_ERROR_ "KufLv91ySdu64DYPiXOHGx5Jj9Q2eKcYwnrjxhQG"
 
 #define MISMADCH_ 1
 #define ENDET_ 2
 
 struct Specificators;
-
 
 // 1st argument is like user input for scanf
 // 2nd argument are the specifiers
@@ -38,62 +34,58 @@ int s21_sscanf(const char *input, const char *format, ...) {
     struct Specificators Specif = {-1, -1, (char)NULL, (char)NULL};
     // CURRENT FORMAT ELEMENT PARSING:
     formatParsing(formatStatic, currentFormatElem, &formatLoaded, &Specif);
+    // printf("\n[%s]\n", currentFormatElem);
+    if (Specif.argWidth == 1) { //если  *, то ширину берем из args
+      Specif.width = va_arg(args, int);
+    }
+   
+    checkFormatError(Specif);  //сочетается ли длина со спецификатором
+
+    if (Specif.Specif == 'c' && Specif.width == -1) {
+      Specif.width = 1;
+    }
+
+    ifSpecIsD(&Specif, inputStatic);
+    ifSpecIsI(&Specif, inputStatic);
+    ifSpecIsF(&Specif, inputStatic);
+    
     
     // CURRENT INPUT ELEMENT PARSING:
-    inputParsing(inputStatic, currentInputElem, &inputLoaded, Specif);
+    inputParsing(inputStatic, currentInputElem, Specif.width, &inputLoaded);
+    // printf("\n[%s]\n", currentInputElem);
 
     // CURRENT VARARG ELEMENT PARSING:
     varArgParsingAndAssignment(currentFormatElem, currentInputElem,
                                &varArgLoaded, va_arg(args, void *), Specif);
-                               
     // -------------------------------
     if (formatLoaded == false && inputLoaded == false &&
         varArgLoaded == false) {
       status = ENDET_;
+      
     } else if (formatLoaded + inputLoaded + varArgLoaded > 0 &&
                formatLoaded + inputLoaded + varArgLoaded < 3) {
-      status = MISMADCH_;
+      status = MISMADCH_; 
+    
     }
   }
   va_end(args);
   return 800815;  // to fix, I don't know what sscanf should return and why
 }
 
-void getNextElem(char *input, char elem[8192], int type) {
+void getNextFormatElem(char *input, char elem[8192]) {
   char *returnStr = NULL;
-  static bool isInputInitilized = false, isFormatInitilized = false;
-  char *currentInputPtr = NULL, *currentFormatPtr = NULL;
-  char inputDelims[] = {'\t', 32, '\n'};
+  static bool isFormatInitilized = false;
+  char *currentFormatString = NULL;
   char formatDelims[] = "%";
-  switch (type) {
-    case INPUD_:
-      if (isInputInitilized) {
-        currentInputPtr = strtok(NULL, inputDelims);
 
-    
-        break;
-      } else {  // if not initialized - then initializ
-        currentInputPtr = strtok(input, inputDelims);
-        isInputInitilized = true;
-        break;
-      }
-    case FORMAD_:
-      if (isFormatInitilized) {
-        currentFormatPtr = s21_strtok(NULL, formatDelims);
-        break;
-      } else {  // if not initialized - then initialize
-        
-        currentFormatPtr = s21_strtok(input, formatDelims);
-        isFormatInitilized = true;
-        break;
-      }
+  if (isFormatInitilized) {
+    currentFormatString = strtok(NULL, formatDelims);
+  } else {  // if not initialized - then initialize
+    currentFormatString = strtok(input, formatDelims);
+    isFormatInitilized = true;
   }
 
-  if (type == INPUD_) {
-    returnStr = currentInputPtr;
-  } else if (type == FORMAD_) {
-    returnStr = currentFormatPtr;
-  }
+  returnStr = currentFormatString;
 
   if (returnStr != NULL) {
     strcpy(elem, returnStr);
@@ -104,29 +96,28 @@ void getNextElem(char *input, char elem[8192], int type) {
 
 void formatParsing(char formatStatic[16384], char currentFormatElem[8192],
                    bool *formatLoaded, struct Specificators *Specif) {
-  getNextElem(formatStatic, currentFormatElem, FORMAD_);
+  getNextFormatElem(formatStatic, currentFormatElem);
   if (strcmp(currentFormatElem, OUR_ERROR_) != 0) {
     *formatLoaded = true;
-    char *temp = currentFormatElem;
-    if (*temp  == '*') {
+        
+    if (*currentFormatElem == '*') {
       (*Specif).argWidth = 1;
-      temp++;
-    } else if (*temp >= '1' && *temp <= '9') {
-        (*Specif).width = atoi(temp);
-      while (*temp >= '0' && *temp <= '9') {
-        temp++;
+      currentFormatElem++;
+    } else if (*currentFormatElem >= '1' && *currentFormatElem <= '9') {
+        (*Specif).width = atoi(currentFormatElem);
+      while (*currentFormatElem >= '0' && *currentFormatElem <= '9') {
+        currentFormatElem++;
       }
     }
     char nextSym[2];
-    sprintf(nextSym, "%c", *temp);
+    sprintf(nextSym, "%c", *currentFormatElem);
     if (strpbrk(nextSym, "lLh")) {
-      (*Specif).length = *temp;
-      temp++;
+      (*Specif).length = *currentFormatElem;
+      currentFormatElem++;
     }
-    sprintf(nextSym, "%c", *temp);
+    sprintf(nextSym, "%c", *currentFormatElem);
     if (strpbrk(nextSym, "cdieEfgGosuxXpn")) {
-      (*Specif).Specif = *temp;
-      temp++;
+      (*Specif).Specif = *currentFormatElem;
     } else {
       printf("error"); //тут типо ошибка при парсинге
     }
@@ -136,19 +127,118 @@ void formatParsing(char formatStatic[16384], char currentFormatElem[8192],
   }
 }
 
-void inputParsing(char inputStatic[16384], char currentInputElem[8192],
-                  bool *inputLoaded, struct Specificators Specif) {
-  if (Specif.width == -1 && Specif.argWidth == -1) {
-    getNextElem(inputStatic, currentInputElem, INPUD_);
+void checkFormatError(struct Specificators Specif) {
+  char Sym[2];
+  sprintf(Sym, "%c", Specif.Specif);
+  if (Specif.length == 'l' || Specif.length == 'h') {
+    if (!strpbrk(Sym, "idouxX")) {
+      //ошибка и выход из программы, сюда наверное нужно статус передавать и изменить его
+    }
+  } else if (Specif.length == 'L') {
+    if (!strpbrk(Sym, "eEfgG")) {
+      //ошибка и выход из программы
+    }
+  } 
+}
+
+void ifSpecIsD(struct Specificators *Specif, char inputStatic[16384]) {
+  if ((*Specif).Specif == 'd') {//если у нас какое то число и нет ширины - ширина пока встречаем в строке цифры. 
+      if ((*Specif).width == -1) {
+        (*Specif).width = 0;
+        while (inputStatic[(*Specif).width] >= '0' && inputStatic[(*Specif).width] <= '9') {
+          (*Specif).width++;
+        }
+      } else { // если задана ширина и в строке встретилось не число раньше, чем кончилась ширина, то это становится новой шириной, а не число остается в строке
+        int findNotNumber = (*Specif).width;
+        int i = 0;
+        while (inputStatic[i] >= '0' && inputStatic[i] <= '9' && findNotNumber > 0) {
+          findNotNumber--;
+          i++;
+        }
+        if (findNotNumber != 0) {
+          (*Specif).width = i;
+        }
+      }
+    }
+}
+
+void ifSpecIsI(struct Specificators *Specif, char inputStatic[16384]) {
+  if ((*Specif).Specif == 'i') {
+  if (inputStatic[0] != '0') { // если первое не 0 - то число десятичное
+    ifSpecIsD(Specif, inputStatic);
   } else {
-    
-    memmove(currentInputElem, inputStatic, Specif.width);
-    char *temp = inputStatic + Specif.width;
-    strcpy(inputStatic, temp);
+    if (inputStatic[1] == 'x') { // если второе х - то шестнадцатиричное
+      if ((*Specif).width == -1) {
+        (*Specif).width = 2;
+        while ((inputStatic[(*Specif).width] >= '0' && inputStatic[(*Specif).width] <= '9')
+        || (inputStatic[(*Specif).width] >= 'a' && inputStatic[(*Specif).width] <= 'f')
+        || (inputStatic[(*Specif).width] >= 'A' && inputStatic[(*Specif).width] <= 'F')) {
+          (*Specif).width++;
+        }
+      } else {
+        int findNotNumber = (*Specif).width;
+        int i = 2;
+        while (((inputStatic[i] >= '0' && inputStatic[i] <= '9')
+        || (inputStatic[i] >= 'a' && inputStatic[i] <= 'f')
+        || (inputStatic[i] >= 'A' && inputStatic[i] <= 'F')) && findNotNumber > 0) {
+          findNotNumber--;
+          i++;
+        }
+        if (findNotNumber != 0) {
+          (*Specif).width = i;
+        }
+      }
+    } else if (inputStatic[0] == '0') { // если первое 0, а второе не х, то восьмиричное
+      if ((*Specif).width == -1) {
+        (*Specif).width = 1;
+        while (inputStatic[(*Specif).width] >= '0' && inputStatic[(*Specif).width] <= '7') {
+          (*Specif).width++;
+        }
+      } else {
+        int findNotNumber = (*Specif).width;
+        int i = 1;
+        while (inputStatic[i] >= '0' && inputStatic[i] <= '7' && findNotNumber > 0) {
+          findNotNumber--;
+          i++;
+        }
+        if (findNotNumber != 0) {
+          (*Specif).width = i;
+        }
+      }
+    }
   }
-  if (strcmp(currentInputElem, OUR_ERROR_) != 0) {
-    *inputLoaded = true;
-  }
+}
+}
+
+void ifSpecIsF(struct Specificators *Specif, char inputStatic[16384]) {
+  if ((*Specif).Specif == 'f') {
+      if ((*Specif).width == -1) {
+        (*Specif).width = 0;
+        int checkDot = 0;
+        while ((inputStatic[(*Specif).width] >= '0' && inputStatic[(*Specif).width] <= '9')
+        || (inputStatic[(*Specif).width] == '.' && checkDot == 0)) {
+          if (inputStatic[(*Specif).width] == '.') { // встречаем точку только 1н раз в числе
+            checkDot = 1;
+          }
+          (*Specif).width++;
+        }
+      } else { 
+        int findNotNumber = (*Specif).width;
+        int i = 0;
+        int checkDot = 0;
+        while (((inputStatic[i] >= '0' && inputStatic[i] <= '9')
+        || (inputStatic[i] == '.' && checkDot == 0)) && findNotNumber > 0) {
+          if (inputStatic[i] == '.') {
+            checkDot = 1;
+          }
+          findNotNumber--;
+          i++;
+        }
+        if (findNotNumber != 0) {
+          (*Specif).width = i;
+        }
+      }
+    }
 }
 
 void varArgParsingAndAssignment(char currentFormatElem[8192],
@@ -160,37 +250,201 @@ void varArgParsingAndAssignment(char currentFormatElem[8192],
 
   // needed, cause passing static arrays too deep breaks them for some reason:
   char tempCurrentInputElem[8192] = {0};
-
   strcpy(tempCurrentInputElem, currentInputElem);
   
-    // [0] part is of course incorrect, properly parsed format
+  if (Specif.Specif == 'i') {// тут вместо строки уже можно структурой пользоваться
+
+    // [0] part is of course incorrect , properly parsed format
     // logic is needed here.
-    assignI(tempCurrentInputElem, varArgLoaded, currentVarArg, Specif);
-  
+    assignI(tempCurrentInputElem, varArgLoaded, currentVarArg);
+  } else if (Specif.Specif == 's' || Specif.Specif == 'c') {
+    assignS(tempCurrentInputElem, varArgLoaded, currentVarArg);
+  } else if (Specif.Specif == 'f') {
+    assignF(tempCurrentInputElem, varArgLoaded, currentVarArg);
+  } else if (Specif.Specif == 'd') {
+    assignD(tempCurrentInputElem, varArgLoaded, currentVarArg);
+  }
 }
 
 void assignI(char inCurrentInputElem[8192], bool *varArgLoaded,
-             void *currentVarArg, struct Specificators Specif) {
-              
+             void *currentVarArg) {
   if (currentVarArg != NULL) {
     *varArgLoaded = true;
-    if (Specif.Specif == 's') {
-      if (inCurrentInputElem[strlen(inCurrentInputElem) - 1] == ' ') { //тут надо все delims проверять
-        inCurrentInputElem[strlen(inCurrentInputElem) - 1] = '\0';
-      }
-      strcpy(currentVarArg, inCurrentInputElem);
-      
+    if (inCurrentInputElem[1] == 'x') {
+      char *temp = inCurrentInputElem;
+      temp++;
+      temp++;
+      *((int *)currentVarArg) = strtol(temp, NULL, 16); // либо свой strtol написать, либо функцию преобразования из 16й в 10ю (что наверное проще)
+    } else if (inCurrentInputElem[0] == '0') {
+      char *temp = inCurrentInputElem;
+      temp++;
+      *((int *)currentVarArg) = strtol(temp, NULL, 8);
     } else {
-      *((int*)currentVarArg) = atoi(inCurrentInputElem);
+      *((int *)currentVarArg) = atoi(inCurrentInputElem);
     }
-    
   } else {
     *varArgLoaded = false;
   }
 }
 
+void assignS(char currentInputElem[8192], bool *varArgLoaded,
+             void *currentVarArg) {
+  if (currentVarArg != NULL) {
+    *varArgLoaded = true;
+    strcpy(currentVarArg, currentInputElem);
+  } else {
+    *varArgLoaded = false;
+  }
+}
+
+void assignF(char inCurrentInputElem[8192], bool *varArgLoaded,
+             void *currentVarArg) {
+  if (currentVarArg != NULL) {
+    *varArgLoaded = true;
+    *((float *)currentVarArg) = atof(inCurrentInputElem);
+  } else {
+    *varArgLoaded = false;
+  }
+}
+
+void assignD(char inCurrentInputElem[8192], bool *varArgLoaded,
+             void *currentVarArg) {
+  if (currentVarArg != NULL) {
+    *varArgLoaded = true;
+    *((int *)currentVarArg) = atoi(inCurrentInputElem);
+  } else {
+    *varArgLoaded = false;
+  }
+}
+
+
+char *strtokChop(char *str, const char *delim, char *leftOver) {
+  static char *new_str;
+  char *tmp = str;
+  int check = 1;
+  if (str != NULL) {
+    new_str = str;
+  } else if (!new_str) {  //если строка закончилась, возвращаем 0
+    tmp = 0;
+    check = 0;
+  }
+  if (check != 0) {
+    size_t check1 = s21_strspn(new_str, delim);  // есть ли сейчас разделитель
+
+    str = new_str + check1;  // перепрыгиваем разделитель
+    tmp = new_str + check1;
+    size_t check2 = s21_strcspn(str, delim);  // длина до следующего разделителя
+    new_str = str + check2;  // перепрыгиваем до следующего разделителя
+    if (new_str == str) {  // для случая когда стартовая строка пустая
+      tmp = 0;
+      new_str = 0;
+    } else {
+      if (*new_str != 0) {  // зануляем разделитель
+        *new_str = 0;
+        new_str++;
+      } else {
+        new_str = NULL;  // если строка закончилась то NULL
+      }
+    }
+  }
+
+  // right chop goes into leftOver:
+  if (new_str != NULL) {
+    strcpy(leftOver, new_str);
+  } else {  // if return is NULL then we fill with "error" string
+    strcpy(leftOver, OUR_ERROR_);
+  }
+
+  return tmp;  // возвращаем строку до зануленного разделителя
+}
+
+void inputParsing(char inputFlip[16384], char currentInputElem[8192], int wid,
+                  bool *inputLoaded) {
+  static bool flipFlop = false;
+  static char inputFlop[16384] = {0};
+  if (wid == -1) {
+    if (flipFlop == false) {
+      strcpy(currentInputElem, strtokChop(inputFlip, "\n \t", inputFlop));
+      flipFlop = true;
+    } else if (flipFlop == true) {
+      strcpy(currentInputElem, strtokChop(inputFlop, "\n \t", inputFlip));
+      flipFlop = false;
+    }
+  } else {
+    if (flipFlop == false) {
+      fillOneByOne(inputFlip, currentInputElem, wid);
+    } else if (flipFlop == true) {
+      fillOneByOne(inputFlop, currentInputElem, wid);
+    }
+    
+  }
+  if (strcmp(currentInputElem, OUR_ERROR_) != 0) {
+    *inputLoaded = true;
+  }
+}
+
+void fillOneByOne(char input[16384], char currentInputElem[8192], int wid) {
+  int i = 0;
+  int j = 0;
+  while (input[i] != '\0' && j < wid) {
+    if (s21_match("\t \n", input[i]) == false) {
+      currentInputElem[j] = input[i];
+      j++;
+    } else { // если поймали разделитель - прерываем
+      currentInputElem[j] = '\0';
+      j = wid;
+    }
+    i++;
+  }
+  
+  currentInputElem[j] = '\0';
+
+  chopLeft(input, i);
+}
+
+void chopLeft(char input[16384], int howMany) {
+  int j = 0;
+  for (int i = howMany; input[i] != '\0'; i++, j++) {
+    if (i == howMany && s21_match("\t \n", input[i]) == true) { //избавляемся от всех разделителей в начале строки
+      j--;
+    } else {
+      input[j] = input[i];
+    }
+  }
+  input[j] = '\0';
+  
+}
+
 // shrakmer: тут я хомячу код потому что мне так удобно, в конце удалим:
 // ---------------------------------------------------------------------
+
+// printf("inputStatic: %s\n", inputStatic);
+// printf("leftover: %s\n", leftOver);
+// printf("curInputElem: %s\n", currentInputElem);
+
+// printf("%s", input);
+
+// void chopLeft(char input[16384], int howMany) {
+//   int j = 0;
+//   for (int i = howMany; (i < (howMany * 2)) && (input[i] != '\0'); i++, j++)
+//   {
+//     input[j] = input[i];
+//   }
+//   input[j] = '\0';
+//   printf("%s", input);
+// }
+
+// printf("curIElem: %s\n", currentInputElem);
+// printf("curIElem: %s\n", tempCurrentInputElem);
+// printf("curFElem: %s\n", currentFormatElem);
+
+// void inputParsing(char inputStatic[16384], char currentInputElem[8192],
+//                   bool *inputLoaded) {
+//   getNextElemWithStrtok(inputStatic, currentInputElem, INPUD_);
+//   if (strcmp(currentInputElem, OUR_ERROR_) != 0) {
+//     *inputLoaded = true;
+//   }
+// }
 
 // printf("currentFormatElem:[%s]\n", currentFormatElem);
 
