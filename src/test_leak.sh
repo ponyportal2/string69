@@ -20,7 +20,7 @@ info() {
         fi
     elif [[ "$OSTYPE" == "darwin"* ]]; 
     then 
-        if [ "$(grep "0 leaks for 0 total leaked bytes" leak.log)" == "" ]
+        if [ "$(grep "0 leaks for 0 total leaked bytes" test.log)" == "" ]
         then
             echo -e "${RED}-------------------------------------------------${NC}"
             echo -e "${RED}FAIL${NC}: $(grep "ERROR SUMMARY" test.log)"

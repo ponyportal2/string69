@@ -62,5 +62,5 @@ leaks: s21_string.a
 rebuild: clean gcov_report
 
 clean:
-	rm -f test libs21_string.a *.gc* test.info log.xml test.log
+	rm -f test libs21_string.a *.gc* test.info log.xml test.log leak.log
 	rm -f -rf report

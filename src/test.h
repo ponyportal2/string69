@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <regex.h>
+#include <ctype.h>
 #include "s21_string.h"
 
 #define SIZE 1024
@@ -31,7 +32,9 @@ struct tcase_ tcases[] = {
   "strlen_tc", "strpbrk_tc",
   "strrchr_tc", "strspn_tc",
   "strstr_tc", "strtok_tc",
-  "strspn_tc"
+  "strspn_tc", "to_upper",
+  "to_lower", "insert",
+  "trim"
 };
 
 struct test_struct {

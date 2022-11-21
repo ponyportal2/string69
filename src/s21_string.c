@@ -58,7 +58,6 @@ void *s21_memchr(const void *arr, int c, size_t n) {
       sym = tmp_int;
     }
   }
-  
   return sym;
 }
 
@@ -459,7 +458,7 @@ size_t s21_strlen(const char* str) {
 // duffmank
 // Part 5 Специальные функции обработки строк (вдохновленные классом String в
 // языке C#)
-void *insert(const char *src, const char *str, size_t start_index) {
+void *s21_insert(const char *src, const char *str, size_t start_index) {
   char *temp = NULL;
   if (start_index < strlen(src)) {
     temp = malloc(sizeof(char) * (strlen(src) + strlen(str)));
@@ -477,10 +476,10 @@ void *insert(const char *src, const char *str, size_t start_index) {
   return temp;
 }
 
-void *to_upper(const char *str) {
+void *s21_to_upper(const char *str) {
   char *temp = NULL;
   if (str != NULL) {
-    temp = malloc(sizeof(char) * strlen(str));
+    temp = (char*)malloc(strlen(str)*sizeof(char));
     for (size_t i = 0; i < strlen(str); i++) {
       if (str[i] >= 97 && str[i] <= 122) {
         temp[i] = str[i] - 32;
@@ -492,7 +491,7 @@ void *to_upper(const char *str) {
   return temp;
 }
 
-void *to_lower(const char *str) {
+void *s21_to_lower(const char *str) {
   char *temp = NULL;
   if (str != NULL) {
     temp = malloc(sizeof(char) * strlen(str));
@@ -507,7 +506,7 @@ void *to_lower(const char *str) {
   return temp;
 }
 
-void *trim(const char *src, const char *trim_chars) {
+void *s21_trim(const char *src, const char *trim_chars) {
   char *temp = NULL;
   if (src != NULL && trim_chars != NULL) {
     size_t counts = 0;

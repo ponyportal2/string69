@@ -211,6 +211,73 @@ START_TEST(strtok_test) {
 }
 END_TEST
 
+//to_upper
+START_TEST(to_upper_test) {
+  char str1[SIZE] = "";
+  char str2[SIZE] = "";
+  strcpy(str1, test[_i].str1);
+  strcpy(str2, test[_i].str1);
+  for (int i = 0; i < strlen(test[_i].str1); i++) {
+    str2[i] = toupper(str2[i]);
+  }
+  ck_assert_pstr_eq(str2, s21_to_upper(str2));
+}
+END_TEST
+
+//to_lower
+START_TEST(to_lower_test) {
+  char str1[SIZE] = "";
+  char str2[SIZE] = "";
+  strcpy(str1, test[_i].str1);
+  strcpy(str2, test[_i].str1);
+  for (int i = 0; i < strlen(test[_i].str1); i++) {
+    str2[i] = tolower(str2[i]);
+  }
+  ck_assert_pstr_eq(str2, s21_to_lower(str2));
+}
+END_TEST
+
+//insert
+START_TEST(insert_test) { 
+  char str1[SIZE] = "";
+  char str2[SIZE] = "";
+  char str3[SIZE] = "";
+  char str4[SIZE] = "";
+  strcpy(str1, test[_i].str1);
+  strcpy(str2, test[_i].str2);
+  strcpy(str3, test[_i].str1);
+  strcpy(str4, test[_i].str2);
+  if (test[_i].n < strlen(str2)) {
+    char res[SIZE] = "";
+    strncpy(res, str1, test[_i].n);
+    strcat(res, str2);
+    size_t j = 0;
+    char res1[SIZE] = "";
+    for (size_t i = test[_i].n; i < strlen(str1); i++) {
+      res1[j] = str1[i]; 
+      j++;
+    }
+    strcat(res, res1);
+    ck_assert_pstr_eq(res, s21_insert(str4, str3, test[_i].n));
+  } else {
+    ck_assert_pstr_eq(NULL, s21_insert(str4, str3, test[_i].n));
+  }
+}
+END_TEST
+
+//trim
+START_TEST(trim_test) {
+  char str1[SIZE] = "";
+  char str2[SIZE] = "";
+  strcpy(str1, test[_i].str1);
+  strcpy(str2, test[_i].str1);
+  for (int i = 0; i < strlen(test[_i].str1); i++) {
+    str2[i] = tolower(str2[i]);
+  }
+  ck_assert_pstr_eq(str2, s21_to_lower(str2));
+}
+END_TEST
+
 TCase *create_tc(size_t index, size_t size) {
   TCase *tc = tcase_create(tcases[index].name);
   tcase_set_timeout(tc, 10);
@@ -290,6 +357,10 @@ void add_cases(TCase** tc, size_t index, size_t size) {
     case 17: tcase_add_loop_test(*tc, strstr_test, 0, size); break;
     case 18: tcase_add_loop_test(*tc, strtok_test, 0, size); break;
     case 19: tcase_add_loop_test(*tc, strspn_test, 0, size); break;
+    case 20: //tcase_add_loop_test(*tc, to_upper_test, 0, size); break; //leaks
+    case 21: //tcase_add_loop_test(*tc, to_lower_test, 0, size); break; //leaks
+    case 22: //tcase_add_loop_test(*tc, insert_test, 0, size); break; //leaks
+    case 23: //tcase_add_loop_test(*tc, trim_test, 0, size); break;
     default: break;
   }
 }
@@ -339,14 +410,14 @@ size_t set_test(char* filename, list** tmp) {
     while (read != -1) {
            list* p = *tmp;
            while (p != NULL) {
-           // for (int i = MIN_C; i <= MAX_C; i++) {
-           //   for (int j = MIN_N; j <= MAX_N; j++) {
+            for (int i = MIN_C; i <= MAX_C; i++) {
+              for (int j = MIN_N; j <= MAX_N; j++) {
                   char* buf = strdup(line);
                   char* buf1 = strdup(p->str1);
-                  test[size] = (struct test_struct){buf,buf1, 'i', 9};
+                  test[size] = (struct test_struct){buf,buf1, 'i', 2};
                   size++;
-             //   }
-            //}
+                }
+            }
               p = p->next;
            }
       read = getline(&line, &len, f);
