@@ -105,17 +105,27 @@ END_TEST
 
 //strcmp
 START_TEST(strcmp_test) {
-  ck_assert_int_eq(
-      strcmp(test[_i].str1, test[_i].str2),
-      s21_strcmp(test[_i].str1, test[_i].str2));
+  int i = 0, j = 0;
+  i = strcmp(test[_i].str1, test[_i].str2);
+  j = s21_strcmp(test[_i].str1, test[_i].str2);
+  if (i == -1 || i == 1) {
+    if (j < 0) j = -1;
+    else if (j > 0) j = 1;
+  }
+  ck_assert_int_eq(i, j);
 }
 END_TEST
 
 //strncmp
 START_TEST(strncmp_test) {
-  ck_assert_int_eq(
-      strncmp(test[_i].str1, test[_i].str2, test[_i].n),
-      s21_strncmp(test[_i].str1, test[_i].str2, test[_i].n));
+  int i = 0, j = 0;
+  i = strncmp(test[_i].str1, test[_i].str2, test[_i].n);
+  j = s21_strncmp(test[_i].str1, test[_i].str2, test[_i].n);
+  if (i == -1 || i == 1) {
+    if (j < 0) j = -1;
+    else if (j > 0) j = 1;
+  }
+  ck_assert_int_eq(i, j);
 }
 END_TEST
 
@@ -217,7 +227,7 @@ START_TEST(to_upper_test) {
   char str2[SIZE] = "";
   strcpy(str1, test[_i].str1);
   strcpy(str2, test[_i].str1);
-  for (int i = 0; i < strlen(test[_i].str1); i++) {
+  for (size_t i = 0; i < strlen(test[_i].str1); i++) {
     str2[i] = toupper(str2[i]);
   }
   ck_assert_pstr_eq(str2, s21_to_upper(str2));
@@ -230,7 +240,7 @@ START_TEST(to_lower_test) {
   char str2[SIZE] = "";
   strcpy(str1, test[_i].str1);
   strcpy(str2, test[_i].str1);
-  for (int i = 0; i < strlen(test[_i].str1); i++) {
+  for (size_t i = 0; i < strlen(test[_i].str1); i++) {
     str2[i] = tolower(str2[i]);
   }
   ck_assert_pstr_eq(str2, s21_to_lower(str2));
@@ -247,7 +257,7 @@ START_TEST(insert_test) {
   strcpy(str2, test[_i].str2);
   strcpy(str3, test[_i].str1);
   strcpy(str4, test[_i].str2);
-  if (test[_i].n < strlen(str2)) {
+  if ((size_t) test[_i].n < strlen(str2)) {
     char res[SIZE] = "";
     strncpy(res, str1, test[_i].n);
     strcat(res, str2);
@@ -265,16 +275,43 @@ START_TEST(insert_test) {
 }
 END_TEST
 
+void reverser(char* str1, char* str2, char *res) {
+    size_t n = strspn(str1, str2);
+    size_t j = 0;
+      for (size_t i = n; i < strlen(str1); i++) {
+        res[j] = str1[i];
+        j++; 
+      }
+      printf("start!!!!%s\n", res);
+      char tmp[SIZE]="";
+      strcpy(tmp, res);
+     // printf("tmp!!!!%s\n", tmp);
+      char c = 32;
+      n = j - 1;
+      size_t i = 0;
+      for (i = 0; i < n; i++) {
+        //res[i] = tmp1[n-1-i];
+      }
+}
+
 //trim
 START_TEST(trim_test) {
   char str1[SIZE] = "";
   char str2[SIZE] = "";
   strcpy(str1, test[_i].str1);
-  strcpy(str2, test[_i].str1);
-  for (int i = 0; i < strlen(test[_i].str1); i++) {
-    str2[i] = tolower(str2[i]);
+  strcpy(str2, test[_i].str2);
+  if (test[_i].str1 != NULL && test[_i].str2 != NULL) {
+    char res[SIZE] = "";
+    
+     reverser(str1, str2, res);
+      printf("!!!!%s\n", res);
+      char res1[SIZE] = ""; 
+      reverser(res, str2, res1);
+      printf("end!!!!%s\n", res1);
+    ck_assert_pstr_eq(res1, s21_trim(str1, str2));
+  } else {
+    ck_assert_pstr_eq(NULL, s21_trim(str1, str2));
   }
-  ck_assert_pstr_eq(str2, s21_to_lower(str2));
 }
 END_TEST
 
@@ -295,7 +332,6 @@ void print_log() {
     ssize_t read = getline(&line, &len, f);
     char name[SIZE] = "", num[SIZE] = "";
     while (read != -1) {
-      size_t size = strlen(line);
       if (!found_err && found_pattern(line, "failure")) found_err = 1;
       if (!found_name && found_err && found_pattern(line, "<id>")) {
         memset(name, 0, sizeof(name));
@@ -320,7 +356,7 @@ void print_log() {
 void print_error(char name_test[SIZE], int index) {
   printf("-------------------------------------------------\n");
   printf("FAILED %s №%d:", name_test, index);
-  printf("\t{ %s, %s, %d, %d }\n", test[index].str1, test[index].str2, test[index].c, test[index].n);
+  printf("\t{ |%s|, |%s|, |%d|, |%d| }\n", test[index].str1, test[index].str2, test[index].c, test[index].n);
 }
 
 int found_pattern(char *line, char *pattern) {
@@ -345,8 +381,8 @@ void add_cases(TCase** tc, size_t index, size_t size) {
     case 5: tcase_add_loop_test(*tc, strcat_test, 0, size); break;
     case 6: tcase_add_loop_test(*tc, strncat_test, 0, size); break;
     case 7: tcase_add_loop_test(*tc, strchr_test, 0, size); break;
-    case 8: tcase_add_loop_test(*tc, strcmp_test, 0, size); break; //fails
-    case 9: //tcase_add_loop_test(*tc, strncmp_test, 0, size); break; //fails
+    case 8: tcase_add_loop_test(*tc, strcmp_test, 0, size); break;
+    case 9: tcase_add_loop_test(*tc, strncmp_test, 0, size); break;
     case 10: tcase_add_loop_test(*tc, strcpy_test, 0, size); break;
     case 11: tcase_add_loop_test(*tc, strncpy_test, 0, size); break;
     case 12: tcase_add_loop_test(*tc, strcspn_test, 0, size); break;
@@ -357,9 +393,9 @@ void add_cases(TCase** tc, size_t index, size_t size) {
     case 17: tcase_add_loop_test(*tc, strstr_test, 0, size); break;
     case 18: tcase_add_loop_test(*tc, strtok_test, 0, size); break;
     case 19: tcase_add_loop_test(*tc, strspn_test, 0, size); break;
-    case 20: //tcase_add_loop_test(*tc, to_upper_test, 0, size); break; //leaks
-    case 21: //tcase_add_loop_test(*tc, to_lower_test, 0, size); break; //leaks
-    case 22: //tcase_add_loop_test(*tc, insert_test, 0, size); break; //leaks
+    case 20: tcase_add_loop_test(*tc, to_upper_test, 0, size); break; //leaks
+    case 21: tcase_add_loop_test(*tc, to_lower_test, 0, size); break; //leaks
+    case 22: tcase_add_loop_test(*tc, insert_test, 0, size); break; //leaks
     case 23: //tcase_add_loop_test(*tc, trim_test, 0, size); break;
     default: break;
   }
@@ -414,7 +450,7 @@ size_t set_test(char* filename, list** tmp) {
               for (int j = MIN_N; j <= MAX_N; j++) {
                   char* buf = strdup(line);
                   char* buf1 = strdup(p->str1);
-                  test[size] = (struct test_struct){buf,buf1, 'i', 2};
+                  test[size] = (struct test_struct){buf,buf1, i, j};
                   size++;
                 }
             }

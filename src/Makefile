@@ -42,15 +42,15 @@ cppcheck:
 
 gcov_report:
 	gcc $(GFLAGS) $(SYSFLAG) test.c s21_string.c $(LFLAGS) -o test
-	$(LEAK) ./test > test.log
+	-./test > test.log
 	bash test_log.sh
 	lcov -t "test" -o test.info -c -d .
 	genhtml -o report test.info
 	open report/index.html
 	
 test: s21_string.a
-	gcc $(SYSFLAG) test.c -L. -ls21_string $(LFLAGS) -o test
-	$(LEAK) ./test > test.log
+	gcc $(CFLAGS) $(SYSFLAG) test.c -L. -ls21_string $(LFLAGS) -o test
+	-./test > test.log
 	bash test_log.sh
 
 leaks: s21_string.a

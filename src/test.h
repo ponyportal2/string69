@@ -22,20 +22,21 @@ struct tcase_ {
 };
 
 struct tcase_ tcases[] = {
-  "memchr_tc", "memcmp_tc", 
-  "memcpy_tc", "memset_tc", 
-  "memmove_tc", "strcat_tc",
-  "strncat_tc", "strchr_tc",
-  "strcmp_tc", "strncmp_tc"
-  "strcpy_tc", "strncpy_tc",
-  "strcspn_tc", "strerror_tc",
-  "strlen_tc", "strpbrk_tc",
-  "strrchr_tc", "strspn_tc",
-  "strstr_tc", "strtok_tc",
-  "strspn_tc", "to_upper",
-  "to_lower", "insert",
-  "trim"
+  {"memchr_tc"}, {"memcmp_tc"}, 
+  {"memcpy_tc"}, {"memset_tc"}, 
+  {"memmove_tc"}, {"strcat_tc"},
+  {"strncat_tc"}, {"strchr_tc"},
+  {"strcmp_tc"}, {"strncmp_tc"},
+  {"strcpy_tc"}, {"strncpy_tc"},
+  {"strcspn_tc"}, {"strerror_tc"},
+  {"strlen_tc"}, {"strpbrk_tc"},
+  {"strrchr_tc"}, {"strspn_tc"},
+  {"strstr_tc"}, {"strtok_tc"},
+  {"strspn_tc"}, {"to_upper"},
+  {"to_lower"}, {"insert"},
+  {"trim"}
 };
+
 
 struct test_struct {
     char* str1;
@@ -56,6 +57,7 @@ struct test_struct test[SIZE] = {
   {"ere\0re", "\n\t\0", '8', 5}
 };
 
+void reverser(char* str1, char* str2, char* res);
 void printAllCases(size_t size);
 size_t set_test(char* filename, list** tmp);
 list* set_params(char* filename, list* tests_);

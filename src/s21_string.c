@@ -2,7 +2,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 #include "s21_strerror_codes.h"
 
@@ -366,7 +365,7 @@ char *s21_strerror(int errcode) { // надо в мейк добавить $(SYS
   } else {
     char num_error[20];
     sprintf(num_error, "%d", errcode); // поменять на свой
-    size_t i = strlen(unknown);
+    size_t i = s21_strlen(unknown);
     while (unknown[i] != ' ') {
       unknown[i] = '\0';
       i--;
@@ -460,17 +459,17 @@ size_t s21_strlen(const char* str) {
 // языке C#)
 void *s21_insert(const char *src, const char *str, size_t start_index) {
   char *temp = NULL;
-  if (start_index < strlen(src)) {
-    temp = malloc(sizeof(char) * (strlen(src) + strlen(str)));
+  if (start_index < s21_strlen(src)) {
+    temp = malloc(sizeof(char) * (s21_strlen(src) + s21_strlen(str)));
     for (size_t i = 0; i < start_index; i++) {
       temp[i] = str[i];
     }
-    for (size_t i = start_index; (i - start_index) < strlen(src); i++) {
+    for (size_t i = start_index; (i - start_index) < s21_strlen(src); i++) {
       temp[i] = src[i - start_index];
     }
-    for (size_t i = start_index + strlen(src); i < (strlen(src) + strlen(str));
+    for (size_t i = start_index + s21_strlen(src); i < (s21_strlen(src) + s21_strlen(str));
          i++) {
-      temp[i] = str[i - strlen(src)];
+      temp[i] = str[i - s21_strlen(src)];
     }
   }
   return temp;
@@ -479,8 +478,8 @@ void *s21_insert(const char *src, const char *str, size_t start_index) {
 void *s21_to_upper(const char *str) {
   char *temp = NULL;
   if (str != NULL) {
-    temp = (char*)malloc(strlen(str)*sizeof(char));
-    for (size_t i = 0; i < strlen(str); i++) {
+    temp = (char*)malloc(s21_strlen(str)*sizeof(char));
+    for (size_t i = 0; i < s21_strlen(str); i++) {
       if (str[i] >= 97 && str[i] <= 122) {
         temp[i] = str[i] - 32;
       } else {
@@ -494,8 +493,8 @@ void *s21_to_upper(const char *str) {
 void *s21_to_lower(const char *str) {
   char *temp = NULL;
   if (str != NULL) {
-    temp = malloc(sizeof(char) * strlen(str));
-    for (size_t i = 0; i < strlen(str); i++) {
+    temp = malloc(sizeof(char) * s21_strlen(str));
+    for (size_t i = 0; i < s21_strlen(str); i++) {
       if (str[i] >= 65 && str[i] <= 90) {
         temp[i] = str[i] + 32;
       } else {
@@ -511,8 +510,8 @@ void *s21_trim(const char *src, const char *trim_chars) {
   if (src != NULL && trim_chars != NULL) {
     size_t counts = 0;
     size_t counte = 0;
-    for (size_t i = 0; i < strlen(src); i++) {
-      for (size_t j = 0; j < strlen(trim_chars); j++) {
+    for (size_t i = 0; i < s21_strlen(src); i++) {
+      for (size_t j = 0; j < s21_strlen(trim_chars); j++) {
         if (src[i] == trim_chars[j]) {
           counts++;
           break;
@@ -522,20 +521,20 @@ void *s21_trim(const char *src, const char *trim_chars) {
         break;
       }
     }
-    for (size_t i = strlen(src) - 1; i > counts; i--) {
-      for (size_t j = 0; j < strlen(trim_chars); j++) {
+    for (size_t i = s21_strlen(src) - 1; i > counts; i--) {
+      for (size_t j = 0; j < s21_strlen(trim_chars); j++) {
         if (src[i] == trim_chars[j]) {
           counte++;
           break;
         }
       }
-      if (counte != strlen(src) - i) {
+      if (counte != s21_strlen(src) - i) {
         break;
       }
     }
-    if (counts + counte <= strlen(src)) {
-      temp = malloc(sizeof(char) * (strlen(src) - counts - counte));
-      for (size_t i = counts; i < strlen(src) - counte; i++) {
+    if (counts + counte <= s21_strlen(src)) {
+      temp = malloc(sizeof(char) * (s21_strlen(src) - counts - counte));
+      for (size_t i = counts; i < s21_strlen(src) - counte; i++) {
         temp[i - counts] = src[i];
       }
     }

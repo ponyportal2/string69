@@ -8,7 +8,7 @@ info() {
     if [ "$(grep "Failures: 0" test.log)" == "" ]
     then
         echo -e "\n${RED}FAILED CASES${NC}:"
-        echo -e "$(grep -e FAIL -e "}" -e "---" test.log)"
+        echo -e "$(grep -e FAIL -e "}" -e "---" -e "|" test.log)"
         echo -e "${RED}-------------------------------------------------${NC}"
         echo -e "${RED}FAIL${NC}: $(grep "Checks" test.log)"
         echo -e "${RED}-------------------------------------------------${NC}"
