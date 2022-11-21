@@ -32,14 +32,17 @@ style:
 	clang-format -n -style=Google *.c *.h
 
 s21_string.a:
-	gcc $(SYSFLAG) -c s21_string.c
+	gcc $(CFLAGS) $(SYSFLAG) -c s21_string.c
 	ar rc libs21_string.a s21_string.o
 	ranlib libs21_string.a
 	rm -f *.o
 
+cppcheck:
+	cppcheck --enable=all *.c
+
 gcov_report:
 	gcc $(GFLAGS) $(SYSFLAG) test.c s21_string.c $(LFLAGS) -o test
-	-./test > test.log
+	$(LEAK) ./test > test.log
 	bash test_log.sh
 	lcov -t "test" -o test.info -c -d .
 	genhtml -o report test.info
@@ -47,14 +50,14 @@ gcov_report:
 	
 test: s21_string.a
 	gcc $(SYSFLAG) test.c -L. -ls21_string $(LFLAGS) -o test
-	-./test > test.log
+	$(LEAK) ./test > test.log
 	bash test_log.sh
 
 leaks: s21_string.a
 	gcc $(SYSFLAG) test.c -L. -ls21_string $(LFLAGS) -o test
 	$(LEAK) ./test > test.log
-	bash test_leak.sh
 	bash test_log.sh
+	bash test_leak.sh
 
 rebuild: clean gcov_report
 

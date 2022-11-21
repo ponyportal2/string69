@@ -13,7 +13,7 @@
 #define MIN_C 115
 #define MAX_N 7
 #define MIN_N 6
-#define FILENAME "1.txt"
+#define FILENAME "txt.txt"
 #define START_STRUCT_SIZE 4
 
 struct tcase_ {
