@@ -27,12 +27,12 @@ void ifSpecIsD(struct Specificators *Specif, char inputStatic[16384]);
 void ifSpecIsI(struct Specificators *Specif, char inputStatic[16384]);
 void ifSpecIsF(struct Specificators *Specif, char inputStatic[16384]);
 void inputParsing(char inputStatic[16384], char currentInputElem[8192], int wid,
-                  bool *inputLoaded);
+                  bool *inputLoaded, char Specif);
 void varArgParsingAndAssignment(char currentFormatElem[8192],
                                 char currentInputElem[8192], bool *varArgLoaded,
                                 void *currentVarArg, struct Specificators Specif);
 char *strtokChop(char *str, const char *delim, char *leftOver);
-void fillOneByOne(char input[16384], char currentInputElem[8192], int wid);
+void fillOneByOne(char input[16384], char currentInputElem[8192], int wid, char Specif);
 void chopLeft(char input[16384], int howMany);
 
 // Спецификатор формата для сканирующих функций следует прототипу:
