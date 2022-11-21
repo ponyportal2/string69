@@ -23,13 +23,13 @@ info() {
         if [ "$(grep "0 leaks for 0 total leaked bytes" test.log)" == "" ]
         then
             echo -e "${RED}-------------------------------------------------${NC}"
-            echo -e "${RED}FAIL${NC}: $(grep "ERROR SUMMARY" test.log)"
+            echo -e "${RED}FAIL${NC}: $(grep "leaks for" test.log)"
             echo -e "${RED}-------------------------------------------------${NC}"
             echo -e "$(grep -e FAIL -e "}" -e "---" test.log)"
             
         else
             echo -e "${GR}-------------------------------------------------${NC}"
-            echo -e "${GR}SUCCESS${NC}: $(grep "ERROR SUMMARY" test.log)"
+            echo -e "${GR}SUCCESS${NC}: $(grep "0 leaks for 0" test.log)"
             echo -e "${GR}-------------------------------------------------${NC}"
         fi
     fi
