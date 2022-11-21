@@ -51,7 +51,7 @@ int s21_sscanf(const char *input, const char *format, ...) {
     
     
     // CURRENT INPUT ELEMENT PARSING:
-    inputParsing(inputStatic, currentInputElem, Specif.width, &inputLoaded);
+    inputParsing(inputStatic, currentInputElem, Specif.width, &inputLoaded, Specif.Specif);
     // printf("\n[%s]\n", currentInputElem);
 
     // CURRENT VARARG ELEMENT PARSING:
@@ -142,15 +142,19 @@ void checkFormatError(struct Specificators Specif) {
 }
 
 void ifSpecIsD(struct Specificators *Specif, char inputStatic[16384]) {
+  int startParse = 0;
+  if (inputStatic[0] == '+' || inputStatic[0] == '-') {
+    startParse++;
+  }
   if ((*Specif).Specif == 'd') {//если у нас какое то число и нет ширины - ширина пока встречаем в строке цифры. 
       if ((*Specif).width == -1) {
-        (*Specif).width = 0;
+        (*Specif).width = startParse;
         while (inputStatic[(*Specif).width] >= '0' && inputStatic[(*Specif).width] <= '9') {
           (*Specif).width++;
         }
       } else { // если задана ширина и в строке встретилось не число раньше, чем кончилась ширина, то это становится новой шириной, а не число остается в строке
         int findNotNumber = (*Specif).width;
-        int i = 0;
+        int i = startParse;
         while (inputStatic[i] >= '0' && inputStatic[i] <= '9' && findNotNumber > 0) {
           findNotNumber--;
           i++;
@@ -163,13 +167,18 @@ void ifSpecIsD(struct Specificators *Specif, char inputStatic[16384]) {
 }
 
 void ifSpecIsI(struct Specificators *Specif, char inputStatic[16384]) {
+  int startParse = 2;
+  if (inputStatic[0] == '+' || inputStatic[0] == '-') {
+    startParse++;
+  }
   if ((*Specif).Specif == 'i') {
-  if (inputStatic[0] != '0') { // если первое не 0 - то число десятичное
-    ifSpecIsD(Specif, inputStatic);
+  if ((inputStatic[0] != '0' && !((inputStatic[0] == '+' || inputStatic[0] == '-'))) ||
+      (inputStatic[1] != '0' && ((inputStatic[0] == '+' || inputStatic[0] == '-'))) ){ // если первое не 0 - то число десятичное
+        ifSpecIsD(Specif, inputStatic);
   } else {
-    if (inputStatic[1] == 'x') { // если второе х - то шестнадцатиричное
+    if (inputStatic[startParse - 1] == 'x') { // если второе х - то шестнадцатиричное
       if ((*Specif).width == -1) {
-        (*Specif).width = 2;
+        (*Specif).width = startParse;
         while ((inputStatic[(*Specif).width] >= '0' && inputStatic[(*Specif).width] <= '9')
         || (inputStatic[(*Specif).width] >= 'a' && inputStatic[(*Specif).width] <= 'f')
         || (inputStatic[(*Specif).width] >= 'A' && inputStatic[(*Specif).width] <= 'F')) {
@@ -177,7 +186,7 @@ void ifSpecIsI(struct Specificators *Specif, char inputStatic[16384]) {
         }
       } else {
         int findNotNumber = (*Specif).width;
-        int i = 2;
+        int i = startParse;
         while (((inputStatic[i] >= '0' && inputStatic[i] <= '9')
         || (inputStatic[i] >= 'a' && inputStatic[i] <= 'f')
         || (inputStatic[i] >= 'A' && inputStatic[i] <= 'F')) && findNotNumber > 0) {
@@ -188,15 +197,16 @@ void ifSpecIsI(struct Specificators *Specif, char inputStatic[16384]) {
           (*Specif).width = i;
         }
       }
-    } else if (inputStatic[0] == '0') { // если первое 0, а второе не х, то восьмиричное
+    } else if (inputStatic[startParse - 2] == '0') { // если первое 0, а второе не х, то восьмиричное
+      startParse--;
       if ((*Specif).width == -1) {
-        (*Specif).width = 1;
+        (*Specif).width = startParse;
         while (inputStatic[(*Specif).width] >= '0' && inputStatic[(*Specif).width] <= '7') {
           (*Specif).width++;
         }
       } else {
         int findNotNumber = (*Specif).width;
-        int i = 1;
+        int i = startParse;
         while (inputStatic[i] >= '0' && inputStatic[i] <= '7' && findNotNumber > 0) {
           findNotNumber--;
           i++;
@@ -211,9 +221,13 @@ void ifSpecIsI(struct Specificators *Specif, char inputStatic[16384]) {
 }
 
 void ifSpecIsF(struct Specificators *Specif, char inputStatic[16384]) {
+  int startParse = 0;
+  if (inputStatic[0] == '+' || inputStatic[0] == '-') {
+    startParse++;
+  }
   if ((*Specif).Specif == 'f') {
       if ((*Specif).width == -1) {
-        (*Specif).width = 0;
+        (*Specif).width = startParse;
         int checkDot = 0;
         while ((inputStatic[(*Specif).width] >= '0' && inputStatic[(*Specif).width] <= '9')
         || (inputStatic[(*Specif).width] == '.' && checkDot == 0)) {
@@ -224,7 +238,7 @@ void ifSpecIsF(struct Specificators *Specif, char inputStatic[16384]) {
         }
       } else { 
         int findNotNumber = (*Specif).width;
-        int i = 0;
+        int i = startParse;
         int checkDot = 0;
         while (((inputStatic[i] >= '0' && inputStatic[i] <= '9')
         || (inputStatic[i] == '.' && checkDot == 0)) && findNotNumber > 0) {
@@ -269,18 +283,30 @@ void varArgParsingAndAssignment(char currentFormatElem[8192],
 void assignI(char inCurrentInputElem[8192], bool *varArgLoaded,
              void *currentVarArg) {
   if (currentVarArg != NULL) {
-    *varArgLoaded = true;
-    if (inCurrentInputElem[1] == 'x') {
-      char *temp = inCurrentInputElem;
+    char *temp = inCurrentInputElem;
+    int checkSign = 1;
+    int i; // чтобы перепрыгнуть знак 
+    if (inCurrentInputElem[0] == '-') {
+      checkSign = -1;
+      i = 2; 
       temp++;
+    } else if (inCurrentInputElem[0] == '+') {
+      checkSign = 1;
+      i = 2;
       temp++;
-      *((int *)currentVarArg) = strtol(temp, NULL, 16); // либо свой strtol написать, либо функцию преобразования из 16й в 10ю (что наверное проще)
-    } else if (inCurrentInputElem[0] == '0') {
-      char *temp = inCurrentInputElem;
-      temp++;
-      *((int *)currentVarArg) = strtol(temp, NULL, 8);
     } else {
-      *((int *)currentVarArg) = atoi(inCurrentInputElem);
+      i = 1;
+    }
+    *varArgLoaded = true;
+    if (inCurrentInputElem[i] == 'x') { 
+      temp++;
+      temp++;
+      *((int *)currentVarArg) = checkSign * strtol(temp, NULL, 16); // либо свой strtol написать, либо функцию преобразования из 16й в 10ю (что наверное проще)
+    } else if (inCurrentInputElem[i - 1] == '0') {
+      temp++;
+      *((int *)currentVarArg) = checkSign * strtol(temp, NULL, 8);
+    } else {
+      *((int *)currentVarArg) = checkSign * atoi(inCurrentInputElem);
     }
   } else {
     *varArgLoaded = false;
@@ -321,6 +347,7 @@ void assignD(char inCurrentInputElem[8192], bool *varArgLoaded,
 char *strtokChop(char *str, const char *delim, char *leftOver) {
   static char *new_str;
   char *tmp = str;
+  char rememberDelim[2] = {'\0', '\0'};
   int check = 1;
   if (str != NULL) {
     new_str = str;
@@ -340,6 +367,8 @@ char *strtokChop(char *str, const char *delim, char *leftOver) {
       new_str = 0;
     } else {
       if (*new_str != 0) {  // зануляем разделитель
+        rememberDelim[0] = *new_str;
+         
         *new_str = 0;
         new_str++;
       } else {
@@ -350,7 +379,10 @@ char *strtokChop(char *str, const char *delim, char *leftOver) {
 
   // right chop goes into leftOver:
   if (new_str != NULL) {
-    strcpy(leftOver, new_str);
+    if (rememberDelim[0] != '\0') {
+      strcat(leftOver, rememberDelim);
+    }
+    strcat(leftOver, new_str);
   } else {  // if return is NULL then we fill with "error" string
     strcpy(leftOver, OUR_ERROR_);
   }
@@ -359,40 +391,40 @@ char *strtokChop(char *str, const char *delim, char *leftOver) {
 }
 
 void inputParsing(char inputFlip[16384], char currentInputElem[8192], int wid,
-                  bool *inputLoaded) {
+                  bool *inputLoaded, char Specif) {
   static bool flipFlop = false;
   static char inputFlop[16384] = {0};
-  if (wid == -1) {
-    if (flipFlop == false) {
-      strcpy(currentInputElem, strtokChop(inputFlip, "\n \t", inputFlop));
-      flipFlop = true;
-    } else if (flipFlop == true) {
-      strcpy(currentInputElem, strtokChop(inputFlop, "\n \t", inputFlip));
-      flipFlop = false;
-    }
-  } else {
-    if (flipFlop == false) {
-      fillOneByOne(inputFlip, currentInputElem, wid);
-    } else if (flipFlop == true) {
-      fillOneByOne(inputFlop, currentInputElem, wid);
-    }
-    
-  }
+  fillOneByOne(inputFlip, currentInputElem, wid, Specif);
+
   if (strcmp(currentInputElem, OUR_ERROR_) != 0) {
     *inputLoaded = true;
   }
 }
 
-void fillOneByOne(char input[16384], char currentInputElem[8192], int wid) {
+void fillOneByOne(char input[16384], char currentInputElem[8192], int wid, char Specif) {
   int i = 0;
   int j = 0;
-  while (input[i] != '\0' && j < wid) {
-    if (s21_match("\t \n", input[i]) == false) {
+  bool checkWid = false;
+  if (wid == -1) {
+    checkWid = true;
+  }
+  while (input[i] != '\0' && (j < wid || checkWid)) {
+    if (i == 0 && Specif == 's') { // если s, то игнорим все делимы в начале
+      while (s21_match("\t \n", input[i])) {
+        i++;
+      }
+    }
+    if (s21_match("\t \n", input[i]) == false && Specif == 's') {
       currentInputElem[j] = input[i];
       j++;
-    } else { // если поймали разделитель - прерываем
+    } else if (Specif == 's') { // если поймали разделитель - прерываем
       currentInputElem[j] = '\0';
+      i--;
       j = wid;
+      checkWid = false;
+    } else {
+      currentInputElem[j] = input[i];
+      j++;
     }
     i++;
   }
@@ -405,11 +437,9 @@ void fillOneByOne(char input[16384], char currentInputElem[8192], int wid) {
 void chopLeft(char input[16384], int howMany) {
   int j = 0;
   for (int i = howMany; input[i] != '\0'; i++, j++) {
-    if (i == howMany && s21_match("\t \n", input[i]) == true) { //избавляемся от всех разделителей в начале строки
-      j--;
-    } else {
+
       input[j] = input[i];
-    }
+    
   }
   input[j] = '\0';
   
