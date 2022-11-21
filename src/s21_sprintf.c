@@ -9,18 +9,15 @@
 
 typedef struct Specificator {
   short width, precision;
-  char specif;
+  char type;
 } Specificator;
 
-void formatStringToBufferCat(char* buff, char* pointerToStr,
-                             char* pointerToSpec);
 void formatPrint(char* buff, Specificator spec, void* currentVarArg);
-Specificator parseSpecificator(char* pointerToSpec);
+Specificator parseSpecificator(char* pointerToSpec, char** pointerToFormatStr);
 
 int main() {
   char* buf;
-  int test = s21_sprintf(buf, "Takaya shtuka: %6.2f %d %c %s", 3.1415, 100, 'C',
-                         "Far");
+  int test = s21_sprintf(buf, "Takaya shtuka: %6.2f", 3.1415);
   return 0;
 }
 
@@ -34,9 +31,9 @@ int s21_sprintf(char* buff, const char* format, ...) {
     bool outputLoaded = false;
     bool varArgLoaded = false;
     // CURRENT FORMAT ELEMENT PRINT
-    char* pointerToSpec = strchr(pointerToFormatStr, '%');
-    formatStringToBufferCat(buff, pointerToFormatStr, pointerToSpec);
-    Specificator spec = parseSpecificator(pointerToSpec);
+    char* pointerToSpec = strtok(pointerToFormatStr, '%');
+    strcat(buff, pointerToFormatStr);
+    Specificator spec = parseSpecificator(pointerToSpec, pointerToFormatStr);
     formatPrint(buff, spec, va_arg(args, void*));
     // -------------------------------
     if (formatLoaded == false && outputLoaded == false &&
@@ -50,20 +47,24 @@ int s21_sprintf(char* buff, const char* format, ...) {
   va_end(args);
 }
 
-void formatStringToBufferCat(char* buff, char* pointerToFormatStr,
-                             char* pointerToSpec) {
-  char* pointer = buff;
-  while (pointerToFormatStr != pointerToSpec) {
-    *pointer = *pointerToFormatStr;
-    pointer++;
-    pointerToFormatStr++;
+void formatPrint(char* buff, Specificator spec, void* currentVarArg) {
+  if (spec.type == 'f') {
+    char src[1024];
+    gcvt(*(float*)currentVarArg, spec.precision, src);
+    strcat_with_max_width(buff, src, spec.width);
   }
-  *pointer = '\0';
 }
 
-void formatPrint(char* buff, Specificator spec, void* currentVarArg) {}
+void strcat_with_max_width(char* buff, char* src, int width) {
+  int length = strlen(src);
+  while (width - length > 0) {
+    strcat(buff, ' ');
+    length++;
+  }
+  strcat(buff, src);
+}
 
-Specificator parseSpecificator(char* pointerToSpec) {
-  Specificator spec = {6, 1, 'f'};
+Specificator parseSpecificator(char* pointerToSpec, char** pointerToFormatStr) {
+  Specificator spec = {6, 2, 'f'};
   return spec;
 }
