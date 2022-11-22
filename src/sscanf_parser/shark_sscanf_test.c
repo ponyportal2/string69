@@ -1,15 +1,19 @@
 #include "shark_sscanf_test.h"
+#include <string.h>
 
 int main(int argc, char **argv) {
   (void)argc;
   (void)argv;
-  int Int = 0;
+  float Int = 0;
+  int Int2 = 0;
   char testInt[128][128] = {0};
+  char *p;
 
-  s21_sscanf("+0123a2boba abiba dsboba biba popa", "%i%s%3c%s%s", &Int, testInt[1],
-             testInt[2], testInt[3], testInt[4]);
-  printf("[%i][%s][%s][%s][%s]", Int, testInt[1], testInt[2], testInt[3],
+  s21_sscanf("0.123e+2a3b3aoba abiba dsboba biba popa", "%f%p%6c%n%s", &Int, &p,
+             testInt[2], &Int2, testInt[4]);
+  printf("[%f][%p][%s][%d][%s]", Int, p, testInt[2], Int2,
          testInt[4]);
+  //printf("%d", s21_memcmp("Pudgeasd", "Pudgeasd", 18));
   return 0;
 }
 
