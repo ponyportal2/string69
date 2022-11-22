@@ -9,10 +9,19 @@ int main(int argc, char **argv) {
   char testInt[128][128] = {0};
   char *p;
 
-  s21_sscanf("0.123e+2a3b3aoba abiba dsboba biba popa", "%f%p%6c%n%s", &Int, &p,
-             testInt[2], &Int2, testInt[4]);
-  printf("[%f][%p][%s][%d][%s]", Int, p, testInt[2], Int2,
-         testInt[4]);
+
+    char fstr[] = "%c%%%c%c%c";
+    char str[] = "z *'@";
+
+    int a1 = 0, a2 = 0, b1 = 0, b2 = 0, c1 = 0, c2 = 0, d1 = 0, d2 = 0;
+    s21_sscanf(str, fstr, &a1, &b1, &c1, &d1);
+    sscanf(str, fstr, &a2, &b2, &c2, &d2);
+  
+     
+    printf("%d %d\n",a1, a2);
+     printf("%d %d\n",b1, b2);
+      printf("%d %d\n",c1, c2);
+       printf("%d %d\n",d1, d2);
   //printf("%d", s21_memcmp("Pudgeasd", "Pudgeasd", 18));
   return 0;
 }

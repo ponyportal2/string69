@@ -27,13 +27,14 @@ int s21_sscanf(const char *input, const char *format, ...) {
   char currentFormatElem[8192] = {0};
   size_t n_counter = 0;
   int status = 0;
+  int checkStartScanf = 1;
   while (status != MISMADCH_ && status != ENDET_) {
     bool formatLoaded = false;
     bool inputLoaded = false;
     bool varArgLoaded = false;
     struct Specificators Specif = {-1, -1, (char)NULL, (char)NULL};
     // CURRENT FORMAT ELEMENT PARSING:
-    formatParsing(formatStatic, currentFormatElem, &formatLoaded, &Specif);
+    formatParsing(formatStatic, currentFormatElem, &formatLoaded, &Specif, &checkStartScanf);
     // printf("\n[%s]\n", currentFormatElem);
     if (Specif.argWidth == 1) { //если  *, то ширину берем из args
       Specif.width = va_arg(args, int);
@@ -77,24 +78,26 @@ int s21_sscanf(const char *input, const char *format, ...) {
     }
   }
   va_end(args);
-  return 800815;  // to fix, I don't know what sscanf should return and why
+  return 0;  // to fix, I don't know what sscanf should return and why
 }
 
-void getNextFormatElem(char *input, char elem[8192]) {
+void getNextFormatElem(char *input, char elem[8192], int *checkStartScanf) {
   char *returnStr = NULL;
-  static bool isFormatInitilized = false;
-  char *currentFormatString = NULL;
+  static char *currentFormatString = NULL;
   char formatDelims[] = "%";
-
-  if (isFormatInitilized) {
-    currentFormatString = strtok(NULL, formatDelims);
-  } else {  // if not initialized - then initialize
-    currentFormatString = strtok(input, formatDelims);
-    isFormatInitilized = true;
+  if (*checkStartScanf) {
+    currentFormatString = input;
+    *checkStartScanf = 0;
   }
-
-  returnStr = currentFormatString;
-
+  while (*currentFormatString != '\0' && *currentFormatString != '%') {
+    currentFormatString++;
+  }
+  if (*currentFormatString != '\0') {
+    currentFormatString++;
+    returnStr = currentFormatString;
+  } else {
+    currentFormatString = NULL;
+  }
   if (returnStr != NULL) {
     strcpy(elem, returnStr);
   } else {  // if return is NULL then we return "error" string
@@ -103,8 +106,11 @@ void getNextFormatElem(char *input, char elem[8192]) {
 }
 
 void formatParsing(char formatStatic[16384], char currentFormatElem[8192],
-                   bool *formatLoaded, struct Specificators *Specif) {
-  getNextFormatElem(formatStatic, currentFormatElem);
+                   bool *formatLoaded, struct Specificators *Specif, int *checkStartScanf) {
+
+    getNextFormatElem(formatStatic, currentFormatElem, checkStartScanf);
+    
+
   if (strcmp(currentFormatElem, OUR_ERROR_) != 0) {
     *formatLoaded = true;
         
@@ -126,8 +132,10 @@ void formatParsing(char formatStatic[16384], char currentFormatElem[8192],
     sprintf(nextSym, "%c", *currentFormatElem);
     if (strpbrk(nextSym, "cdieEfgGosuxXpn")) {
       (*Specif).Specif = *currentFormatElem;
+    } else if (nextSym[0] == '%') {
+     
     } else {
-      printf("error"); //тут типо ошибка при парсинге
+       printf("error"); //тут типо ошибка при парсинге
     }
     
     // parsing current format element. worst case, something like this:

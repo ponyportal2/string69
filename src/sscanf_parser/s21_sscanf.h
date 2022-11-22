@@ -9,7 +9,7 @@ struct Specificators {
 };
 
 int s21_sscanf(const char *input, const char *format, ...);
-void getNextFormatElem(char *input, char elem[8192]);
+void getNextFormatElem(char *input, char elem[8192], int *checkStartScanf);
 void assignI(char currentInputElem[8192], bool *varArgLoaded,
              void *currentVarArg, size_t *n_counter);
 void assignS(char currentInputElem[8192], bool *varArgLoaded,
@@ -29,7 +29,7 @@ void assignN(char inCurrentInputElem[8192], bool *varArgLoaded,
 void assignP(char inCurrentInputElem[8192], bool *varArgLoaded,
              void *currentVarArg, size_t *n_counter);  
 void formatParsing(char formatStatic[16384], char currentFormatElem[8192],
-                   bool *formatLoaded, struct Specificators *Specif);
+                   bool *formatLoaded, struct Specificators *Specif,  int *checkStartScanf);
 void checkFormatError (struct Specificators Specif);
 void ifSpecIsD(struct Specificators *Specif, char inputStatic[16384]);
 void ifSpecIsI(struct Specificators *Specif, char inputStatic[16384]);
