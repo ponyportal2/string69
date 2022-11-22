@@ -286,7 +286,7 @@ void reverser(char* str1, char* str2, char *res) {
       char tmp[SIZE]="";
       strcpy(tmp, res);
      // printf("tmp!!!!%s\n", tmp);
-      char c = 32;
+      //char c = 32;
       n = j - 1;
       size_t i = 0;
       for (i = 0; i < n; i++) {
