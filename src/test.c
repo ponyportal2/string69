@@ -225,12 +225,20 @@ END_TEST
 START_TEST(to_upper_test) {
   char str1[SIZE] = "";
   char str2[SIZE] = "";
+  char *s = NULL;
+  if (test[_i].str1 != NULL) {
   strcpy(str1, test[_i].str1);
   strcpy(str2, test[_i].str1);
   for (size_t i = 0; i < strlen(test[_i].str1); i++) {
     str2[i] = toupper(str2[i]);
   }
-  ck_assert_pstr_eq(str2, s21_to_upper(str2));
+    s = s21_to_upper(test[_i].str1);
+    ck_assert_pstr_eq(str2, s);
+  } else {
+    s = s21_to_upper(test[_i].str1);
+    ck_assert_pstr_eq(NULL, s);
+  }
+  if (s) free(s);
 }
 END_TEST
 
@@ -238,12 +246,20 @@ END_TEST
 START_TEST(to_lower_test) {
   char str1[SIZE] = "";
   char str2[SIZE] = "";
+  char* s = NULL;
+  if (test[_i].str1 != NULL) {
   strcpy(str1, test[_i].str1);
   strcpy(str2, test[_i].str1);
   for (size_t i = 0; i < strlen(test[_i].str1); i++) {
     str2[i] = tolower(str2[i]);
   }
-  ck_assert_pstr_eq(str2, s21_to_lower(str2));
+    s = s21_to_lower(str2);
+    ck_assert_pstr_eq(str2, s);
+  } else {
+    s = s21_to_lower(str2);
+    ck_assert_pstr_eq(NULL, s);
+  }
+    if (s) free(s);
 }
 END_TEST
 
@@ -253,11 +269,12 @@ START_TEST(insert_test) {
   char str2[SIZE] = "";
   char str3[SIZE] = "";
   char str4[SIZE] = "";
-  strcpy(str1, test[_i].str1);
-  strcpy(str2, test[_i].str2);
+  char* s = NULL;
+  strcpy(str1, test[_i].str2);
+  strcpy(str2, test[_i].str1);
   strcpy(str3, test[_i].str1);
   strcpy(str4, test[_i].str2);
-  if ((size_t) test[_i].n < strlen(str2)) {
+  if ((size_t) test[_i].n < strlen(str1)) {
     char res[SIZE] = "";
     strncpy(res, str1, test[_i].n);
     strcat(res, str2);
@@ -268,50 +285,54 @@ START_TEST(insert_test) {
       j++;
     }
     strcat(res, res1);
-    ck_assert_pstr_eq(res, s21_insert(str4, str3, test[_i].n));
+    s = s21_insert(str3, str4, test[_i].n);
+    ck_assert_pstr_eq(res, s);
   } else {
-    ck_assert_pstr_eq(NULL, s21_insert(str4, str3, test[_i].n));
+    s = s21_insert(str3, str4, test[_i].n);
+    ck_assert_pstr_eq(NULL, s);
   }
+  if (s) free(s);
 }
 END_TEST
 
-void reverser(char* str1, char* str2, char *res) {
-    size_t n = strspn(str1, str2);
+void reverser(char* src, char* pat, char *res) {
+    size_t n = strspn(src, pat);
     size_t j = 0;
-      for (size_t i = n; i < strlen(str1); i++) {
-        res[j] = str1[i];
-        j++; 
-      }
-      printf("start!!!!%s\n", res);
-      char tmp[SIZE]="";
-      strcpy(tmp, res);
-     // printf("tmp!!!!%s\n", tmp);
-      //char c = 32;
-      n = j - 1;
-      size_t i = 0;
-      for (i = 0; i < n; i++) {
-        //res[i] = tmp1[n-1-i];
-      }
+    for (size_t i = n; i < strlen(src); i++) {
+        res[j] = src[i]; j++;
+    }
+    res[j] = '\0';
+    size_t size = strlen(src) - n;
+    size_t i = 0;
+    j = strlen(src) - n - 1;
+    for (i = 0; i < size/2; i++) {
+        char c = res[i];
+        res[i] = res[j];
+        res[j] = c;
+        j--;
+    }
+    res[size] = '\0';
 }
 
 //trim
 START_TEST(trim_test) {
   char str1[SIZE] = "";
   char str2[SIZE] = "";
+  void *s = NULL;
   strcpy(str1, test[_i].str1);
   strcpy(str2, test[_i].str2);
   if (test[_i].str1 != NULL && test[_i].str2 != NULL) {
     char res[SIZE] = "";
-    
-     reverser(str1, str2, res);
-      printf("!!!!%s\n", res);
+      reverser(str1, str2, res);
       char res1[SIZE] = ""; 
       reverser(res, str2, res1);
-      printf("end!!!!%s\n", res1);
-    ck_assert_pstr_eq(res1, s21_trim(str1, str2));
+      s = s21_trim(str1, str2);
+    ck_assert_pstr_eq(res1, s);
   } else {
-    ck_assert_pstr_eq(NULL, s21_trim(str1, str2));
+      s = s21_trim(str1, str2);
+      ck_assert_pstr_eq(NULL, s);
   }
+  if (s) free(s);
 }
 END_TEST
 
@@ -393,10 +414,10 @@ void add_cases(TCase** tc, size_t index, size_t size) {
     case 17: tcase_add_loop_test(*tc, strstr_test, 0, size); break;
     case 18: tcase_add_loop_test(*tc, strtok_test, 0, size); break;
     case 19: tcase_add_loop_test(*tc, strspn_test, 0, size); break;
-    case 20: tcase_add_loop_test(*tc, to_upper_test, 0, size); break; //leaks
-    case 21: tcase_add_loop_test(*tc, to_lower_test, 0, size); break; //leaks
-    case 22: tcase_add_loop_test(*tc, insert_test, 0, size); break; //leaks
-    case 23: //tcase_add_loop_test(*tc, trim_test, 0, size); break; //
+    case 20: tcase_add_loop_test(*tc, to_upper_test, 0, size); break;
+    case 21: tcase_add_loop_test(*tc, to_lower_test, 0, size); break;
+    case 22: tcase_add_loop_test(*tc, insert_test, 0, size); break;
+    case 23: tcase_add_loop_test(*tc, trim_test, 0, size); break;
     default: break;
   }
 }
@@ -492,7 +513,7 @@ void printAllCases(size_t size) {
 
 int main(void) {
   list* tmp = NULL;
-  size_t size = 0;
+  size_t size = START_STRUCT_SIZE;
   size = set_test(FILENAME, &tmp);
   printAllCases(size);
   Suite *str_suite = create_str_suite(size - 1);

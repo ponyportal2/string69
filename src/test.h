@@ -57,7 +57,7 @@ struct test_struct test[SIZE] = {
   {"ere\0re", "\n\t\0", '8', 5}
 };
 
-void reverser(char* str1, char* str2, char* res);
+void reverser(char* src, char* pat, char *res);
 void printAllCases(size_t size);
 size_t set_test(char* filename, list** tmp);
 list* set_params(char* filename, list* tests_);

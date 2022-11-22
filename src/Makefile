@@ -1,7 +1,7 @@
 UNAME:=$(shell uname -s)
 ifeq ($(UNAME),Linux)
 	LFLAGS=-lcheck -lsubunit -lrt -lm -lpthread
-	LEAK=valgrind --leak-check=full --log-file="leak.log"
+	LEAK=valgrind --leak-check=full --show-leak-kinds=all --log-file="leak.log"
 	SYSFLAG=-D LINUX
 endif
 ifeq ($(UNAME),Darwin)

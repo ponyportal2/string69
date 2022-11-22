@@ -459,18 +459,20 @@ size_t s21_strlen(const char* str) {
 // языке C#)
 void *s21_insert(const char *src, const char *str, size_t start_index) {
   char *temp = NULL;
-  if (start_index < s21_strlen(src)) {
-    temp = malloc(sizeof(char) * (s21_strlen(src) + s21_strlen(str)));
+  if (start_index < s21_strlen(str)) {
+    size_t size = 1;
+    temp = malloc(sizeof(char) * (s21_strlen(src) + 2 + s21_strlen(str)));
     for (size_t i = 0; i < start_index; i++) {
       temp[i] = str[i];
     }
     for (size_t i = start_index; (i - start_index) < s21_strlen(src); i++) {
       temp[i] = src[i - start_index];
     }
-    for (size_t i = start_index + s21_strlen(src); i < (s21_strlen(src) + s21_strlen(str));
-         i++) {
-      temp[i] = str[i - s21_strlen(src)];
+    for (size = start_index + s21_strlen(src); size <= (s21_strlen(src) + s21_strlen(str));
+         size++) {
+      temp[size] = str[size - s21_strlen(src)];
     }
+    temp[size] = '\0';
   }
   return temp;
 }
@@ -478,14 +480,16 @@ void *s21_insert(const char *src, const char *str, size_t start_index) {
 void *s21_to_upper(const char *str) {
   char *temp = NULL;
   if (str != NULL) {
-    temp = (char*)malloc(s21_strlen(str)*sizeof(char));
-    for (size_t i = 0; i < s21_strlen(str); i++) {
+    temp = malloc(sizeof(char) * (s21_strlen(str) + 1));
+    size_t i = 0;
+    for (i = 0; i < s21_strlen(str); i++) {
       if (str[i] >= 97 && str[i] <= 122) {
         temp[i] = str[i] - 32;
       } else {
         temp[i] = str[i];
       }
     }
+    temp[i]='\0';
   }
   return temp;
 }
@@ -493,20 +497,22 @@ void *s21_to_upper(const char *str) {
 void *s21_to_lower(const char *str) {
   char *temp = NULL;
   if (str != NULL) {
-    temp = malloc(sizeof(char) * s21_strlen(str));
-    for (size_t i = 0; i < s21_strlen(str); i++) {
+    temp = malloc(sizeof(char) * (s21_strlen(str) + 1));
+    size_t i = 0;
+    for (i = 0; i < s21_strlen(str); i++) {
       if (str[i] >= 65 && str[i] <= 90) {
         temp[i] = str[i] + 32;
       } else {
         temp[i] = str[i];
       }
     }
+    temp[i]='\0';
   }
   return temp;
 }
 
 void *s21_trim(const char *src, const char *trim_chars) {
-  char *temp = NULL;
+    char *temp = NULL;
   if (src != NULL && trim_chars != NULL) {
     size_t counts = 0;
     size_t counte = 0;
@@ -533,10 +539,12 @@ void *s21_trim(const char *src, const char *trim_chars) {
       }
     }
     if (counts + counte <= s21_strlen(src)) {
-      temp = malloc(sizeof(char) * (s21_strlen(src) - counts - counte));
-      for (size_t i = counts; i < s21_strlen(src) - counte; i++) {
+      temp = malloc(sizeof(char) * (s21_strlen(src) - counts - counte+1));
+      size_t i = 0;
+      for (i = counts; i < s21_strlen(src) - counte; i++) {
         temp[i - counts] = src[i];
       }
+      temp[i - counts] = '\0';
     }
   }
   return temp;
