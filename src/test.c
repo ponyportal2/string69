@@ -396,7 +396,7 @@ void add_cases(TCase** tc, size_t index, size_t size) {
     case 20: tcase_add_loop_test(*tc, to_upper_test, 0, size); break; //leaks
     case 21: tcase_add_loop_test(*tc, to_lower_test, 0, size); break; //leaks
     case 22: tcase_add_loop_test(*tc, insert_test, 0, size); break; //leaks
-    case 23: //tcase_add_loop_test(*tc, trim_test, 0, size); break;
+    case 23: //tcase_add_loop_test(*tc, trim_test, 0, size); break; //
     default: break;
   }
 }
