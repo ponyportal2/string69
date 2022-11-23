@@ -43,18 +43,16 @@ char *s21_strstr(char *str1, char *str2) {
 
 void *s21_memchr(const void *arr, int c, size_t n) {
   void *sym = NULL;
-  unsigned char *tmp = (unsigned char *)arr;
-  int *tmp_int = (int *)arr;
+  void *tmp = (void *)arr;
   if (n > 0) {
-    while ((*tmp != c && *tmp_int != c) && n > 1) {
+    while ((*((int*)tmp) != c && *((unsigned char*)tmp) != c) && n > 1) {
       n--;
       tmp++;
-      tmp_int++;
     }
-    if (*tmp == c) {
+    if (*((int*)tmp) == c) {
       sym = tmp;
-    } else if (*tmp_int == c) {
-      sym = tmp_int;
+    } else if (*((unsigned char*)tmp) == c) {
+      sym = tmp;
     }
   }
   return sym;
@@ -75,6 +73,13 @@ int s21_memcmp(const void *str1, const void *str2, size_t n) {
       n--;
     }
   }
+  #ifdef LINUX
+  if (result > 0) {
+    result = 1;
+  } else if (result < 0) {
+    result = -1;
+  }
+  #endif
   
   return result;
 }
@@ -113,7 +118,7 @@ void *s21_memset(void *str, int c, size_t n) {
     tmp++;
   }
   if (n == 0) {
-    fprintf(stderr, "Original daet error");
+    
   }
   return str;
 }
@@ -152,6 +157,13 @@ int s21_strcmp(const char *str1, const char *str2) {
   } else if (!*str1) {
     result = -*str2;
   }
+  #ifdef LINUX
+  if (result > 0) {
+    result = 1;
+  } else if (result < 0) {
+    result = -1;
+  }
+  #endif
   return result;
 }
 
@@ -174,6 +186,13 @@ int s21_strncmp(const char *str1, const char *str2, size_t n) {
   } else if (!*str1 && n) {
     result = -*str2;
   }
+  #ifdef LINUX
+  if (result > 0) {
+    result = 1;
+  } else if (result < 0) {
+    result = -1;
+  }
+  #endif
   return result;
 }
 
