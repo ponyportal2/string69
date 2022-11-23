@@ -80,7 +80,6 @@ int s21_memcmp(const void *str1, const void *str2, size_t n) {
     result = -1;
   }
   #endif
-  
   return result;
 }
 
@@ -157,13 +156,7 @@ int s21_strcmp(const char *str1, const char *str2) {
   } else if (!*str1) {
     result = -*str2;
   }
-  #ifdef LINUX
-  if (result > 0) {
-    result = 1;
-  } else if (result < 0) {
-    result = -1;
-  }
-  #endif
+
   return result;
 }
 
@@ -186,13 +179,7 @@ int s21_strncmp(const char *str1, const char *str2, size_t n) {
   } else if (!*str1 && n) {
     result = -*str2;
   }
-  #ifdef LINUX
-  if (result > 0) {
-    result = 1;
-  } else if (result < 0) {
-    result = -1;
-  }
-  #endif
+
   return result;
 }
 
