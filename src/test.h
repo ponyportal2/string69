@@ -9,13 +9,13 @@
 #include <ctype.h>
 #include "s21_string.h"
 
-#define SIZE 1024
+#define SIZE 4096
 #define MAX_C 116
 #define MIN_C 115
 #define MAX_N 7
 #define MIN_N 6
 #define FILENAME "txt.txt"
-#define START_STRUCT_SIZE 4
+#define START_STRUCT_SIZE 8
 
 struct tcase_ {
   const char* name;
@@ -54,7 +54,11 @@ struct test_struct test[SIZE] = {
   {"shrek is shrek", "shrek is shrek", 's', 6}, 
   {"\n", "\0", 'j', 10},
   {"ABOB\nA", "dgdfgdfg123", '\n', 6}, 
-  {"ere\0re", "\n\t\0", '8', 5}
+  {"ere\0re", "\n\t\0", '8', 5},
+{"0\0\n \0\t habooba\n", "2\0\n 3\t\0 habooba\n", '0', 8},
+{"\00\n \0\t habooba\n", "2\0\n 3\t\0 habooba\n", '0', 8},
+{"\0b\n \0\t habooba\n", "2\n 3\t\0 habooba\n", '0', 8},
+{"b\0\n \0\t habooba\n", "2\n 3\t\0 habooba\n", '0', 8},
 };
 
 void reverser(char* src, char* pat, char *res);
