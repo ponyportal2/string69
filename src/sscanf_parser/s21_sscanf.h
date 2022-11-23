@@ -28,9 +28,9 @@ void assignN(char inCurrentInputElem[8192], bool *varArgLoaded,
              void *currentVarArg, size_t *n_counter);
 void assignP(char inCurrentInputElem[8192], bool *varArgLoaded,
              void *currentVarArg, size_t *n_counter);  
-void formatParsing(char formatStatic[16384], char currentFormatElem[8192],
-                   bool *formatLoaded, struct Specificators *Specif,  int *checkStartScanf);
-void checkFormatError (struct Specificators Specif);
+char formatParsing(char formatStatic[16384], char currentFormatElem[8192],
+                   bool *formatLoaded, struct Specificators *Specif,  int *checkStartScanf, int *status);
+void checkFormatError (struct Specificators Specif, int *status);
 void ifSpecIsD(struct Specificators *Specif, char inputStatic[16384]);
 void ifSpecIsI(struct Specificators *Specif, char inputStatic[16384]);
 void ifSpecIsF(struct Specificators *Specif, char inputStatic[16384]);
@@ -38,12 +38,12 @@ void ifSpecIsO(struct Specificators *Specif, char inputStatic[16384]);
 void ifSpecIsX(struct Specificators *Specif, char inputStatic[16384]);
 void ifSpecIsP(struct Specificators *Specif, char inputStatic[16384]);
 void inputParsing(char inputStatic[16384], char currentInputElem[8192], int wid,
-                  bool *inputLoaded, char Specif);
+                  bool *inputLoaded, char Specif, char checkDelim, bool *startParsing);
 void varArgParsingAndAssignment(char currentFormatElem[8192],
                                 char currentInputElem[8192], bool *varArgLoaded,
                                 void *currentVarArg, struct Specificators Specif, size_t *n_counter);
 char *strtokChop(char *str, const char *delim, char *leftOver);
-void fillOneByOne(char input[16384], char currentInputElem[8192], int wid, char Specif);
+void fillOneByOne(char input[16384], char currentInputElem[8192], int wid, char Specif, char checkDelim, bool *startParsing);
 void chopLeft(char input[16384], int howMany);
 
 // Спецификатор формата для сканирующих функций следует прототипу:
@@ -126,3 +126,4 @@ void chopLeft(char input[16384], int howMany);
 // !!!!!!!!!!!!!!!!!!!!!!!
 // "%*6hhi" -  * давит присовение
 // !!!!!!!!!!!!!!!!!!!!!!!
+

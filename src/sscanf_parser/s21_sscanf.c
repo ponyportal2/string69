@@ -28,19 +28,24 @@ int s21_sscanf(const char *input, const char *format, ...) {
   size_t n_counter = 0;
   int status = 0;
   int checkStartScanf = 1;
+  int counterForReturn = 0;
+  bool startParsing = true;
   while (status != MISMADCH_ && status != ENDET_) {
     bool formatLoaded = false;
     bool inputLoaded = false;
     bool varArgLoaded = false;
     struct Specificators Specif = {-1, -1, (char)NULL, (char)NULL};
     // CURRENT FORMAT ELEMENT PARSING:
-    formatParsing(formatStatic, currentFormatElem, &formatLoaded, &Specif, &checkStartScanf);
+    char checkDelim = formatParsing(formatStatic, currentFormatElem, &formatLoaded, &Specif, &checkStartScanf, &status);
+    if (status == MISMADCH_) {
+      break; //мб тут поменять брей и все что ниже запихать под условие
+    }
     // printf("\n[%s]\n", currentFormatElem);
     if (Specif.argWidth == 1) { //если  *, то ширину берем из args
       Specif.width = va_arg(args, int);
     }
    
-    checkFormatError(Specif);  //сочетается ли длина со спецификатором
+    checkFormatError(Specif, &status);  //сочетается ли длина со спецификатором
 
     if (Specif.Specif == 'c' && Specif.width == -1) {
       Specif.width = 1;
@@ -55,7 +60,7 @@ int s21_sscanf(const char *input, const char *format, ...) {
     
     // CURRENT INPUT ELEMENT PARSING:
     if (Specif.Specif != 'n') {
-    inputParsing(inputStatic, currentInputElem, Specif.width, &inputLoaded, Specif.Specif);
+    inputParsing(inputStatic, currentInputElem, Specif.width, &inputLoaded, Specif.Specif, checkDelim, &startParsing);
     
     } else {
       inputLoaded = true;
@@ -65,7 +70,10 @@ int s21_sscanf(const char *input, const char *format, ...) {
     // CURRENT VARARG ELEMENT PARSING:
     varArgParsingAndAssignment(currentFormatElem, currentInputElem,
                                &varArgLoaded, va_arg(args, void *), Specif, &n_counter);
-    
+
+    if (args != 0) {
+    counterForReturn++;
+    }
     // -------------------------------
     if (formatLoaded == false && inputLoaded == false &&
         varArgLoaded == false) {
@@ -73,12 +81,15 @@ int s21_sscanf(const char *input, const char *format, ...) {
       
     } else if (formatLoaded + inputLoaded + varArgLoaded > 0 &&
                formatLoaded + inputLoaded + varArgLoaded < 3) {
+      if (counterForReturn < 2) {
+        counterForReturn--;
+      }
       status = MISMADCH_; 
     
     }
   }
   va_end(args);
-  return 0;  // to fix, I don't know what sscanf should return and why
+  return counterForReturn;  // to fix, I don't know what sscanf should return and why
 }
 
 void getNextFormatElem(char *input, char elem[8192], int *checkStartScanf) {
@@ -105,8 +116,8 @@ void getNextFormatElem(char *input, char elem[8192], int *checkStartScanf) {
   }
 }
 
-void formatParsing(char formatStatic[16384], char currentFormatElem[8192],
-                   bool *formatLoaded, struct Specificators *Specif, int *checkStartScanf) {
+char formatParsing(char formatStatic[16384], char currentFormatElem[8192],
+                   bool *formatLoaded, struct Specificators *Specif, int *checkStartScanf, int *status) {
 
     getNextFormatElem(formatStatic, currentFormatElem, checkStartScanf);
     
@@ -135,31 +146,38 @@ void formatParsing(char formatStatic[16384], char currentFormatElem[8192],
     } else if (nextSym[0] == '%') {
      
     } else {
-       printf("error"); //тут типо ошибка при парсинге
+       *status = MISMADCH_;
     }
     
     // parsing current format element. worst case, something like this:
     // "*6hhi"
   }
+  currentFormatElem++;
+  return *currentFormatElem;
 }
 
-void checkFormatError(struct Specificators Specif) {
+void checkFormatError(struct Specificators Specif, int *status) {
   char Sym[2];
   sprintf(Sym, "%c", Specif.Specif);
   if (Specif.length == 'l' || Specif.length == 'h') {
     if (!strpbrk(Sym, "idouxX")) {
-      //ошибка и выход из программы, сюда наверное нужно статус передавать и изменить его
+     // *status = MISMADCH_; тут оказывается он просто игнорит, даже саму функцию наверное можно удалить просто
     }
   } else if (Specif.length == 'L') {
     if (!strpbrk(Sym, "eEfgG")) {
-      //ошибка и выход из программы
+     // *status = MISMADCH_;
     }
   } 
 }
 
 void ifSpecIsD(struct Specificators *Specif, char inputStatic[16384]) {
   int startParse = 0;
-  if (inputStatic[0] == '+' || inputStatic[0] == '-') {
+  int j = 0;
+  while (s21_match("\t \n", inputStatic[j])) {
+    j++;
+    startParse++;
+  }
+  if (inputStatic[j] == '+' || inputStatic[j] == '-') {
     startParse++;
   }
   if ((*Specif).Specif == 'd' || (*Specif).Specif == 'u') {//если у нас какое то число и нет ширины - ширина пока встречаем в строке цифры. 
@@ -184,7 +202,12 @@ void ifSpecIsD(struct Specificators *Specif, char inputStatic[16384]) {
 
 void ifSpecIsI(struct Specificators *Specif, char inputStatic[16384]) {
   int startParse = 2;
-  if (inputStatic[0] == '+' || inputStatic[0] == '-') {
+    int j = 0;
+  while (s21_match("\t \n", inputStatic[j])) {
+    j++;
+    startParse++;
+  }
+  if (inputStatic[j] == '+' || inputStatic[j] == '-') {
     startParse++;
   }
   if ((*Specif).Specif == 'i') {
@@ -238,7 +261,12 @@ void ifSpecIsI(struct Specificators *Specif, char inputStatic[16384]) {
 
 void ifSpecIsF(struct Specificators *Specif, char inputStatic[16384]) {
   int startParse = 0;
-  if (inputStatic[0] == '+' || inputStatic[0] == '-') {
+    int j = 0;
+  while (s21_match("\t \n", inputStatic[j])) {
+    j++;
+    startParse++;
+  }
+  if (inputStatic[j] == '+' || inputStatic[j] == '-') {
     startParse++;
   }
   if ((*Specif).Specif == 'f' || (*Specif).Specif == 'e' || (*Specif).Specif == 'E' || (*Specif).Specif == 'g' || (*Specif).Specif == 'G') {
@@ -294,7 +322,12 @@ void ifSpecIsF(struct Specificators *Specif, char inputStatic[16384]) {
 
 void ifSpecIsO(struct Specificators *Specif, char inputStatic[16384]) {
   int startParse = 0;
-  if (inputStatic[0] == '+' || inputStatic[0] == '-') {
+    int j = 0;
+  while (s21_match("\t \n", inputStatic[j])) {
+    j++;
+    startParse++;
+  }
+  if (inputStatic[j] == '+' || inputStatic[j] == '-') {
     startParse++;
   }
   if ((*Specif).Specif == 'o') {//если у нас какое то число и нет ширины - ширина пока встречаем в строке цифры. 
@@ -319,7 +352,12 @@ void ifSpecIsO(struct Specificators *Specif, char inputStatic[16384]) {
 
 void ifSpecIsX(struct Specificators *Specif, char inputStatic[16384]) {
   int startParse = 0;
-  if (inputStatic[0] == '+' || inputStatic[0] == '-') {
+    int j = 0;
+  while (s21_match("\t \n", inputStatic[j])) {
+    j++;
+    startParse++;
+  }
+  if (inputStatic[j] == '+' || inputStatic[j] == '-') {
     startParse++;
   }
   if ((*Specif).Specif == 'x' || (*Specif).Specif == 'X') {//если у нас какое то число и нет ширины - ширина пока встречаем в строке цифры. 
@@ -348,7 +386,12 @@ void ifSpecIsX(struct Specificators *Specif, char inputStatic[16384]) {
 
 void ifSpecIsP(struct Specificators *Specif, char inputStatic[16384]) {
   int startParse = 0;
-  if (inputStatic[0] == '+' || inputStatic[0] == '-') {
+    int j = 0;
+  while (s21_match("\t \n", inputStatic[j])) {
+    j++;
+    startParse++;
+  }
+  if (inputStatic[j] == '+' || inputStatic[j] == '-') {
     startParse++;
   }
   if ((*Specif).Specif == 'p') {//если у нас какое то число и нет ширины - ширина пока встречаем в строке цифры. 
@@ -385,7 +428,7 @@ void varArgParsingAndAssignment(char currentFormatElem[8192],
   // needed, cause passing static arrays too deep breaks them for some reason:
   char tempCurrentInputElem[8192] = {0};
   strcpy(tempCurrentInputElem, currentInputElem);
-  
+ 
   if (Specif.Specif == 'i') {// тут вместо строки уже можно структурой пользоваться
 
     // [0] part is of course incorrect , properly parsed format
@@ -475,7 +518,9 @@ void assignD(char inCurrentInputElem[8192], bool *varArgLoaded,
              void *currentVarArg, size_t *n_counter) {
   if (currentVarArg != NULL) {
     *varArgLoaded = true;
+   // int checkLoad = *((int *)currentVarArg);
     *((int *)currentVarArg) = atoi(inCurrentInputElem);
+
     *n_counter = *n_counter + strlen(inCurrentInputElem);
   } else {
     *varArgLoaded = false;
@@ -545,89 +590,47 @@ void assignP(char inCurrentInputElem[8192], bool *varArgLoaded,
     char *temp = inCurrentInputElem;
     int i; 
     *varArgLoaded = true;
-    *((int *)currentVarArg) = strtol(temp, NULL, 16);
+    *((long int *)currentVarArg) = strtol(temp, NULL, 16);
     *n_counter = *n_counter + strlen(inCurrentInputElem);
   } else {
     *varArgLoaded = false;
   }
 }
 
-
-
-char *strtokChop(char *str, const char *delim, char *leftOver) {
-  static char *new_str;
-  char *tmp = str;
-  char rememberDelim[2] = {'\0', '\0'};
-  int check = 1;
-  if (str != NULL) {
-    new_str = str;
-  } else if (!new_str) {  //если строка закончилась, возвращаем 0
-    tmp = 0;
-    check = 0;
-  }
-  if (check != 0) {
-    size_t check1 = s21_strspn(new_str, delim);  // есть ли сейчас разделитель
-
-    str = new_str + check1;  // перепрыгиваем разделитель
-    tmp = new_str + check1;
-    size_t check2 = s21_strcspn(str, delim);  // длина до следующего разделителя
-    new_str = str + check2;  // перепрыгиваем до следующего разделителя
-    if (new_str == str) {  // для случая когда стартовая строка пустая
-      tmp = 0;
-      new_str = 0;
-    } else {
-      if (*new_str != 0) {  // зануляем разделитель
-        rememberDelim[0] = *new_str;
-         
-        *new_str = 0;
-        new_str++;
-      } else {
-        new_str = NULL;  // если строка закончилась то NULL
-      }
-    }
-  }
-
-  // right chop goes into leftOver:
-  if (new_str != NULL) {
-    if (rememberDelim[0] != '\0') {
-      strcat(leftOver, rememberDelim);
-    }
-    strcat(leftOver, new_str);
-  } else {  // if return is NULL then we fill with "error" string
-    strcpy(leftOver, OUR_ERROR_);
-  }
-
-  return tmp;  // возвращаем строку до зануленного разделителя
-}
-
 void inputParsing(char inputFlip[16384], char currentInputElem[8192], int wid,
-                  bool *inputLoaded, char Specif) {
+                  bool *inputLoaded, char Specif, char checkDelim, bool *startParsing) {
   static bool flipFlop = false;
   static char inputFlop[16384] = {0};
-  fillOneByOne(inputFlip, currentInputElem, wid, Specif);
+  fillOneByOne(inputFlip, currentInputElem, wid, Specif, checkDelim, startParsing);
 
   if (strcmp(currentInputElem, OUR_ERROR_) != 0) {
     *inputLoaded = true;
   }
 }
 
-void fillOneByOne(char input[16384], char currentInputElem[8192], int wid, char Specif) {
+void fillOneByOne(char input[16384], char currentInputElem[8192], int wid, char Specif, char checkDelim, bool *startParsing) {
   int i = 0;
   int j = 0;
   bool checkWid = false;
+  
   if (wid == -1) {
     checkWid = true;
+    
   }
   while (input[i] != '\0' && (j < wid || checkWid)) {
-    if (i == 0 && Specif == 's') { // если s, то игнорим все делимы в начале
+    
+    if (i == 0 && (Specif != 'c' && !(*startParsing))) { // если s, то игнорим все делимы в начале
       while (s21_match("\t \n", input[i])) {
         i++;
       }
+    
     }
-    if (s21_match("\t \n", input[i]) == false && Specif == 's') {
+    *startParsing = false;
+    
+    if (s21_match("\t \n", input[i]) == false) {
       currentInputElem[j] = input[i];
       j++;
-    } else if (Specif == 's') { // если поймали разделитель - прерываем
+    } else if (Specif != 'c') { // если поймали разделитель - прерываем
       currentInputElem[j] = '\0';
       i--;
       j = wid;
@@ -640,7 +643,6 @@ void fillOneByOne(char input[16384], char currentInputElem[8192], int wid, char 
   }
   
   currentInputElem[j] = '\0';
-
   chopLeft(input, i);
 }
 
