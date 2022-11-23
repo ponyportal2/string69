@@ -17,7 +17,7 @@ void formatPrint(char* buff, Specificator spec, void* currentVarArg);
 Specificator parseSpecificator(char* pointerToSpec, char** pointerToFormatStr);
 void strcat_with_max_width(char* buff, char* src, int width);
 void itoa(int num, char* src, int radix);
-void reverse(char* string, int length);
+void reverse(char* string);
 
 int main() {
   char* buf = malloc(30);
@@ -67,13 +67,13 @@ void itoa(int num, char* src, int radix) {
     src[i++] = (char)(digit + 48);
   }
   src[i] = '\0';
-  int length = strlen(src);
-  reverse(src, length);
+  reverse(src);
 }
 
-void reverse(char* string, int length) {
+void reverse(char* string) {
   char temp[MAXLINE];
   strcpy(temp, string);
+  int length = strlen(string);
   int i;
   for (i = 0; i < length; i++) string[i] = temp[length - i - 1];
   string[i] = '\0';
