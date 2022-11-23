@@ -465,18 +465,18 @@ size_t s21_strlen(const char* str) {
 // языке C#)
 void *s21_insert(const char *src, const char *str, size_t start_index) {
   char *temp = NULL;
-  if (start_index < s21_strlen(str)) {
+  if (start_index < s21_strlen(src)) {
     size_t size = 1;
     temp = malloc(sizeof(char) * (s21_strlen(src) + 2 + s21_strlen(str)));
     for (size_t i = 0; i < start_index; i++) {
-      temp[i] = str[i];
+      temp[i] = src[i];
     }
-    for (size_t i = start_index; (i - start_index) < s21_strlen(src); i++) {
-      temp[i] = src[i - start_index];
+    for (size_t i = start_index; (i - start_index) < s21_strlen(str); i++) {
+      temp[i] = str[i - start_index];
     }
-    for (size = start_index + s21_strlen(src); size <= (s21_strlen(src) + s21_strlen(str));
+    for (size = start_index + s21_strlen(str); size <= (s21_strlen(src) + s21_strlen(str));
          size++) {
-      temp[size] = str[size - s21_strlen(src)];
+      temp[size] = src[size - s21_strlen(str)];
     }
     temp[size] = '\0';
   }
