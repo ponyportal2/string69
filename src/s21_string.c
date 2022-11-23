@@ -62,21 +62,22 @@ int s21_memcmp(const void *str1, const void *str2, size_t n) {
   int result = 0;
   char *tmp1 = (char *)str1;
   char *tmp2 = (char *)str2;
- 
+  int counter = 0;
   while (n > 0) {
     result = *(char *)tmp1 - *(char *)tmp2;
     if (result != 0) {
       n = 0;
     } else {
+      counter++;
       tmp1++;
       tmp2++;
       n--;
     }
   }
   #ifdef LINUX
-  if (result > 0) {
+  if (result > 0 && counter != 0) {
     result = 1;
-  } else if (result < 0) {
+  } else if (result < 0 && counter != 0) {
     result = -1;
   }
   #endif
