@@ -30,6 +30,7 @@ int s21_sscanf(const char *input, const char *format, ...) {
   int checkStartScanf = 1;
   int counterForReturn = 0;
   bool startParsing = true;
+  bool stopMove = false;
   while (status != MISMADCH_ && status != ENDET_) {
     bool formatLoaded = false;
     bool inputLoaded = false;
@@ -51,41 +52,35 @@ int s21_sscanf(const char *input, const char *format, ...) {
       Specif.width = 1;
     }
 
-    ifSpecIsD(&Specif, inputStatic);
-    ifSpecIsI(&Specif, inputStatic);
-    ifSpecIsF(&Specif, inputStatic);
-    ifSpecIsO(&Specif, inputStatic);
-    ifSpecIsX(&Specif, inputStatic);
-    ifSpecIsP(&Specif, inputStatic);
+    ifSpecIsD(&Specif, inputStatic, &stopMove);
+    ifSpecIsI(&Specif, inputStatic, &stopMove);
+    ifSpecIsF(&Specif, inputStatic, &stopMove);
+    ifSpecIsO(&Specif, inputStatic, &stopMove);
+    ifSpecIsX(&Specif, inputStatic, &stopMove);
+    ifSpecIsP(&Specif, inputStatic, &stopMove);
     
     // CURRENT INPUT ELEMENT PARSING:
-    if (Specif.Specif != 'n') {
+    if (Specif.Specif != 'n' && !stopMove) {
     inputParsing(inputStatic, currentInputElem, Specif.width, &inputLoaded, Specif.Specif, checkDelim, &startParsing);
     
     } else {
       inputLoaded = true;
     }
     // printf("\n[%s]\n", currentInputElem);
-
     // CURRENT VARARG ELEMENT PARSING:
+    if (!stopMove) {
     varArgParsingAndAssignment(currentFormatElem, currentInputElem,
-                               &varArgLoaded, va_arg(args, void *), Specif, &n_counter);
-
-    if (args != 0) {
-    counterForReturn++;
+                               &varArgLoaded, va_arg(args, void *), Specif, &n_counter, &counterForReturn);
+    } else {
+      va_arg(args, void *);
     }
+
     // -------------------------------
-    if (formatLoaded == false && inputLoaded == false &&
-        varArgLoaded == false) {
+    if (formatLoaded == true && inputLoaded == true &&
+        varArgLoaded == true) {
+          counterForReturn++;
+    } else {
       status = ENDET_;
-      
-    } else if (formatLoaded + inputLoaded + varArgLoaded > 0 &&
-               formatLoaded + inputLoaded + varArgLoaded < 3) {
-      if (counterForReturn < 2) {
-        counterForReturn--;
-      }
-      status = MISMADCH_; 
-    
     }
   }
   va_end(args);
@@ -170,13 +165,16 @@ void checkFormatError(struct Specificators Specif, int *status) {
   } 
 }
 
-void ifSpecIsD(struct Specificators *Specif, char inputStatic[16384]) {
+void ifSpecIsD(struct Specificators *Specif, char inputStatic[16384], bool *stopMove) {
   int startParse = 0;
   int j = 0;
-  while (s21_match("\t \n", inputStatic[j])) {
+  int wid = (*Specif).width;
+  while (s21_match("\t \n", inputStatic[j]) && (wid > 1 || wid == -1)) {
     j++;
     startParse++;
+    wid--;
   }
+
   if (inputStatic[j] == '+' || inputStatic[j] == '-') {
     startParse++;
   }
@@ -186,9 +184,13 @@ void ifSpecIsD(struct Specificators *Specif, char inputStatic[16384]) {
         while (inputStatic[(*Specif).width] >= '0' && inputStatic[(*Specif).width] <= '9') {
           (*Specif).width++;
         }
+        if ((*Specif).width == startParse) {
+          *stopMove = true;
+        }
       } else { // если задана ширина и в строке встретилось не число раньше, чем кончилась ширина, то это становится новой шириной, а не число остается в строке
         int findNotNumber = (*Specif).width;
         int i = startParse;
+       
         while (inputStatic[i] >= '0' && inputStatic[i] <= '9' && findNotNumber > 0) {
           findNotNumber--;
           i++;
@@ -196,16 +198,21 @@ void ifSpecIsD(struct Specificators *Specif, char inputStatic[16384]) {
         if (findNotNumber != 0) {
           (*Specif).width = i;
         }
+        if ((*Specif).width == 0) {
+          *stopMove = true;
+        }
       }
     }
 }
 
-void ifSpecIsI(struct Specificators *Specif, char inputStatic[16384]) {
+void ifSpecIsI(struct Specificators *Specif, char inputStatic[16384], bool *stopMove) {
   int startParse = 2;
     int j = 0;
-  while (s21_match("\t \n", inputStatic[j])) {
+  int wid = (*Specif).width;
+  while (s21_match("\t \n", inputStatic[j]) && (wid > 1 || wid == -1)) {
     j++;
     startParse++;
+    wid--;
   }
   if (inputStatic[j] == '+' || inputStatic[j] == '-') {
     startParse++;
@@ -213,7 +220,7 @@ void ifSpecIsI(struct Specificators *Specif, char inputStatic[16384]) {
   if ((*Specif).Specif == 'i') {
   if ((inputStatic[0] != '0' && !((inputStatic[0] == '+' || inputStatic[0] == '-'))) ||
       (inputStatic[1] != '0' && ((inputStatic[0] == '+' || inputStatic[0] == '-'))) ){ // если первое не 0 - то число десятичное
-        ifSpecIsD(Specif, inputStatic);
+        ifSpecIsD(Specif, inputStatic, stopMove);
   } else {
     if (inputStatic[startParse - 1] == 'x') { // если второе х - то шестнадцатиричное
       if ((*Specif).width == -1) {
@@ -222,6 +229,9 @@ void ifSpecIsI(struct Specificators *Specif, char inputStatic[16384]) {
         || (inputStatic[(*Specif).width] >= 'a' && inputStatic[(*Specif).width] <= 'f')
         || (inputStatic[(*Specif).width] >= 'A' && inputStatic[(*Specif).width] <= 'F')) {
           (*Specif).width++;
+        }
+        if ((*Specif).width == startParse) {
+          *stopMove = true;
         }
       } else {
         int findNotNumber = (*Specif).width;
@@ -235,6 +245,9 @@ void ifSpecIsI(struct Specificators *Specif, char inputStatic[16384]) {
         if (findNotNumber != 0) {
           (*Specif).width = i;
         }
+        if ((*Specif).width == 0) {
+          *stopMove = true;
+        }
       }
     } else if (inputStatic[startParse - 2] == '0') { // если первое 0, а второе не х, то восьмиричное
       startParse--;
@@ -242,6 +255,9 @@ void ifSpecIsI(struct Specificators *Specif, char inputStatic[16384]) {
         (*Specif).width = startParse;
         while (inputStatic[(*Specif).width] >= '0' && inputStatic[(*Specif).width] <= '7') {
           (*Specif).width++;
+        }
+        if ((*Specif).width == startParse) {
+          *stopMove = true;
         }
       } else {
         int findNotNumber = (*Specif).width;
@@ -253,18 +269,23 @@ void ifSpecIsI(struct Specificators *Specif, char inputStatic[16384]) {
         if (findNotNumber != 0) {
           (*Specif).width = i;
         }
+        if ((*Specif).width == 0) {
+          *stopMove = true;
+        }
       }
     }
   }
 }
 }
 
-void ifSpecIsF(struct Specificators *Specif, char inputStatic[16384]) {
+void ifSpecIsF(struct Specificators *Specif, char inputStatic[16384], bool *stopMove) {
   int startParse = 0;
     int j = 0;
-  while (s21_match("\t \n", inputStatic[j])) {
+  int wid = (*Specif).width;
+  while (s21_match("\t \n", inputStatic[j]) && (wid > 1 || wid == -1)) {
     j++;
     startParse++;
+    wid--;
   }
   if (inputStatic[j] == '+' || inputStatic[j] == '-') {
     startParse++;
@@ -279,6 +300,9 @@ void ifSpecIsF(struct Specificators *Specif, char inputStatic[16384]) {
             checkDot = 1;
           }
           (*Specif).width++;
+        }
+        if ((*Specif).width == startParse) {
+          *stopMove = true;
         }
         if (inputStatic[(*Specif).width] == 'e' || inputStatic[(*Specif).width] == 'E') {
           (*Specif).width++;
@@ -316,16 +340,23 @@ void ifSpecIsF(struct Specificators *Specif, char inputStatic[16384]) {
         if (findNotNumber != 0) {
           (*Specif).width = i;
         }
+        if ((*Specif).width == 0) {
+          *stopMove = true;
+        }
       }
+        
     }
+
 }
 
-void ifSpecIsO(struct Specificators *Specif, char inputStatic[16384]) {
+void ifSpecIsO(struct Specificators *Specif, char inputStatic[16384], bool *stopMove) {
   int startParse = 0;
     int j = 0;
-  while (s21_match("\t \n", inputStatic[j])) {
+  int wid = (*Specif).width;
+  while (s21_match("\t \n", inputStatic[j]) && (wid > 1 || wid == -1)) {
     j++;
     startParse++;
+    wid--;
   }
   if (inputStatic[j] == '+' || inputStatic[j] == '-') {
     startParse++;
@@ -335,6 +366,9 @@ void ifSpecIsO(struct Specificators *Specif, char inputStatic[16384]) {
         (*Specif).width = startParse;
         while (inputStatic[(*Specif).width] >= '0' && inputStatic[(*Specif).width] <= '7') {
           (*Specif).width++;
+        }
+        if ((*Specif).width == startParse) {
+          *stopMove = true;
         }
       } else { // если задана ширина и в строке встретилось не число раньше, чем кончилась ширина, то это становится новой шириной, а не число остается в строке
         int findNotNumber = (*Specif).width;
@@ -346,16 +380,21 @@ void ifSpecIsO(struct Specificators *Specif, char inputStatic[16384]) {
         if (findNotNumber != 0) {
           (*Specif).width = i;
         }
+        if ((*Specif).width == 0) {
+          *stopMove = true;
+        }
       }
     }
 }
 
-void ifSpecIsX(struct Specificators *Specif, char inputStatic[16384]) {
+void ifSpecIsX(struct Specificators *Specif, char inputStatic[16384], bool *stopMove) {
   int startParse = 0;
     int j = 0;
-  while (s21_match("\t \n", inputStatic[j])) {
+  int wid = (*Specif).width;
+  while (s21_match("\t \n", inputStatic[j]) && (wid > 1 || wid == -1)) {
     j++;
     startParse++;
+    wid--;
   }
   if (inputStatic[j] == '+' || inputStatic[j] == '-') {
     startParse++;
@@ -368,6 +407,9 @@ void ifSpecIsX(struct Specificators *Specif, char inputStatic[16384]) {
         || (inputStatic[(*Specif).width] >= 'A' && inputStatic[(*Specif).width] <= 'F')) {
           (*Specif).width++;
         }
+        if ((*Specif).width == startParse) {
+          *stopMove = true;
+        }
       } else { // если задана ширина и в строке встретилось не число раньше, чем кончилась ширина, то это становится новой шириной, а не число остается в строке
         int findNotNumber = (*Specif).width;
         int i = startParse;
@@ -380,16 +422,21 @@ void ifSpecIsX(struct Specificators *Specif, char inputStatic[16384]) {
         if (findNotNumber != 0) {
           (*Specif).width = i;
         }
+        if ((*Specif).width == 0) {
+          *stopMove = true;
+        }
       }
     }
 }
 
-void ifSpecIsP(struct Specificators *Specif, char inputStatic[16384]) {
+void ifSpecIsP(struct Specificators *Specif, char inputStatic[16384], bool *stopMove) {
   int startParse = 0;
     int j = 0;
-  while (s21_match("\t \n", inputStatic[j])) {
+  int wid = (*Specif).width;
+  while (s21_match("\t \n", inputStatic[j]) && (wid > 1 || wid == -1)) {
     j++;
     startParse++;
+    wid--;
   }
   if (inputStatic[j] == '+' || inputStatic[j] == '-') {
     startParse++;
@@ -402,6 +449,9 @@ void ifSpecIsP(struct Specificators *Specif, char inputStatic[16384]) {
         || (inputStatic[(*Specif).width] >= 'A' && inputStatic[(*Specif).width] <= 'F')) {
           (*Specif).width++;
         }
+        if ((*Specif).width == startParse) {
+          *stopMove = true;
+        }
       } else { // если задана ширина и в строке встретилось не число раньше, чем кончилась ширина, то это становится новой шириной, а не число остается в строке
         int findNotNumber = (*Specif).width;
         int i = startParse;
@@ -414,13 +464,16 @@ void ifSpecIsP(struct Specificators *Specif, char inputStatic[16384]) {
         if (findNotNumber != 0) {
           (*Specif).width = i;
         }
+        if ((*Specif).width == 0) {
+          *stopMove = true;
+        }
       }
     }
 }
 
 void varArgParsingAndAssignment(char currentFormatElem[8192],
                                 char currentInputElem[8192], bool *varArgLoaded,
-                                void *currentVarArg, struct Specificators Specif, size_t *n_counter) {
+                                void *currentVarArg, struct Specificators Specif, size_t *n_counter, int *counterForReturn) {
   // here we will need to get a var arg based on currentFormatElem and set it
   // through a pointer to what we parsed from currentInputElem.
   // See formatI for a not perfect example
@@ -433,27 +486,27 @@ void varArgParsingAndAssignment(char currentFormatElem[8192],
 
     // [0] part is of course incorrect , properly parsed format
     // logic is needed here.
-    assignI(tempCurrentInputElem, varArgLoaded, currentVarArg, n_counter);
+    assignI(tempCurrentInputElem, varArgLoaded, currentVarArg, n_counter, counterForReturn, Specif);
   } else if (Specif.Specif == 's' || Specif.Specif == 'c') {
-    assignS(tempCurrentInputElem, varArgLoaded, currentVarArg, n_counter);
+    assignS(tempCurrentInputElem, varArgLoaded, currentVarArg, n_counter, counterForReturn, Specif);
   } else if (Specif.Specif == 'f' || Specif.Specif == 'e' || Specif.Specif == 'E' || Specif.Specif == 'g' || Specif.Specif == 'G') {
-    assignF(tempCurrentInputElem, varArgLoaded, currentVarArg, n_counter);
+    assignF(tempCurrentInputElem, varArgLoaded, currentVarArg, n_counter, counterForReturn, Specif);
   } else if (Specif.Specif == 'd' || Specif.Specif == 'u') {
-    assignD(tempCurrentInputElem, varArgLoaded, currentVarArg, n_counter);
+    assignD(tempCurrentInputElem, varArgLoaded, currentVarArg, n_counter, counterForReturn, Specif);
   } else if (Specif.Specif == 'o') {
-    assignO(tempCurrentInputElem, varArgLoaded, currentVarArg, n_counter);
+    assignO(tempCurrentInputElem, varArgLoaded, currentVarArg, n_counter, counterForReturn, Specif);
   } else if (Specif.Specif == 'x' || Specif.Specif == 'X') {
-    assignX(tempCurrentInputElem, varArgLoaded, currentVarArg, n_counter);
+    assignX(tempCurrentInputElem, varArgLoaded, currentVarArg, n_counter, counterForReturn, Specif);
   } else if (Specif.Specif == 'n') {
-    assignN(tempCurrentInputElem, varArgLoaded, currentVarArg, n_counter);
+    assignN(tempCurrentInputElem, varArgLoaded, currentVarArg, n_counter, counterForReturn, Specif);
   } else if (Specif.Specif == 'p') {
-    assignP(tempCurrentInputElem, varArgLoaded, currentVarArg, n_counter);
+    assignP(tempCurrentInputElem, varArgLoaded, currentVarArg, n_counter, counterForReturn, Specif);
   }
   
 }
 
 void assignI(char inCurrentInputElem[8192], bool *varArgLoaded,
-             void *currentVarArg, size_t *n_counter) {
+             void *currentVarArg, size_t *n_counter, int *counterForReturn, struct Specificators Specif) {
   if (currentVarArg != NULL) {
     char *temp = inCurrentInputElem;
      *n_counter = *n_counter + strlen(inCurrentInputElem);
@@ -473,18 +526,51 @@ void assignI(char inCurrentInputElem[8192], bool *varArgLoaded,
       i = 1;
     }
     *varArgLoaded = true;
+      long int checkLoadLong = *((long int *)currentVarArg);
+      short int checkLoadShort = *((short int *)currentVarArg);
+      int checkLoad = *((int *)currentVarArg);
     if (inCurrentInputElem[i] == 'x') { 
       temp++;
       temp++;
-      *((int *)currentVarArg) = checkSign * strtol(temp, NULL, 16); // либо свой strtol написать, либо функцию преобразования из 16й в 10ю (что наверное проще)
-
+      // либо свой strtol написать, либо функцию преобразования из 16й в 10ю (что наверное проще)
+    if (Specif.length == 'l') {
+      *((long int *)currentVarArg) = checkSign * strtol(temp, NULL, 16); 
+    } else if (Specif.length == 'h') {
+      *((short *)currentVarArg) = checkSign * strtol(temp, NULL, 16); 
+    } else {
+       *((int *)currentVarArg) = checkSign * strtol(temp, NULL, 16); 
+    }
     } else if (inCurrentInputElem[i - 1] == '0') {
       temp++;
-      *((int *)currentVarArg) = checkSign * strtol(temp, NULL, 8);
-
+    if (Specif.length == 'l') {
+      *((long int *)currentVarArg) = checkSign * strtol(temp, NULL, 8); 
+    } else if (Specif.length == 'h') {
+      *((short *)currentVarArg) = checkSign * strtol(temp, NULL, 8); 
     } else {
-      *((int *)currentVarArg) = checkSign * atoi(inCurrentInputElem);
+       *((int *)currentVarArg) = checkSign * strtol(temp, NULL, 8); 
+    }
+    } else {
+    if (Specif.length == 'l') {
+      *((long int *)currentVarArg) = checkSign * atoi(inCurrentInputElem); 
+    } else if (Specif.length == 'h') {
+      *((short *)currentVarArg) = checkSign * atoi(inCurrentInputElem); 
+    } else {
+       *((int *)currentVarArg) = checkSign * atoi(inCurrentInputElem); 
+    }
 
+    }
+    if (Specif.length == 'l') {
+    if (checkLoadLong == *((long int *)currentVarArg)) {
+      *counterForReturn = *counterForReturn - 1;
+    }
+    } else if (Specif.length == 'h') {
+      if (checkLoadShort == *((short int *)currentVarArg)) {
+      *counterForReturn = *counterForReturn - 1;
+    }
+    } else {
+    if (checkLoad == *((int *)currentVarArg)) {
+      *counterForReturn = *counterForReturn - 1;
+    }
     }
 
   } else {
@@ -493,21 +579,55 @@ void assignI(char inCurrentInputElem[8192], bool *varArgLoaded,
 }
 
 void assignS(char currentInputElem[8192], bool *varArgLoaded,
-             void *currentVarArg, size_t *n_counter) {
+             void *currentVarArg, size_t *n_counter, int *counterForReturn, struct Specificators Specif) {
   if (currentVarArg != NULL) {
     *varArgLoaded = true;
+    char checkLoad[8192] = {'\0'};
+    wchar_t checkLoadLong[8192] = {'\0'};
+    if (Specif.length == 'l') {
+      strcpy((char*)checkLoadLong, currentInputElem);//не знаю не сломает ли это преобразование что-то
+    } else {
+      strcpy(checkLoad, currentInputElem);
+    }
     strcpy(currentVarArg, currentInputElem);
-    *n_counter = *n_counter + strlen((char*)currentVarArg);
+    if (Specif.length == 'l') {
+    if (strcmp((char*)checkLoadLong, currentVarArg)) {
+      //*varArgLoaded = false;
+      *counterForReturn = *counterForReturn - 1;
+    }
+    } else {
+      if (strcmp(checkLoad, currentVarArg)) {
+      //*varArgLoaded = false;
+      *counterForReturn = *counterForReturn - 1;
+    }
+    }
+  *n_counter = *n_counter + strlen((char*)currentVarArg);
+
   } else {
     *varArgLoaded = false;
   }
 }
 
 void assignF(char inCurrentInputElem[8192], bool *varArgLoaded,
-             void *currentVarArg, size_t *n_counter) {
+             void *currentVarArg, size_t *n_counter, int *counterForReturn, struct Specificators Specif) {
   if (currentVarArg != NULL) {
     *varArgLoaded = true;
-    *((float *)currentVarArg) = atof(inCurrentInputElem);
+    float checkLoad = *((float *)currentVarArg);
+    long double checkLoadLong = *((long double *)currentVarArg);
+    if (Specif.length == 'L') {
+      *((long double *)currentVarArg) = atof(inCurrentInputElem); // тут надо сделать atold?
+    } else {
+      *((float *)currentVarArg) = atof(inCurrentInputElem);
+    }
+    if (Specif.length == 'L') {
+    if (checkLoad == *((long double *)currentVarArg)) {
+      *counterForReturn = *counterForReturn - 1;
+    }
+    } else {
+    if (checkLoad == *((float *)currentVarArg)) {
+      *counterForReturn = *counterForReturn - 1;
+    }
+    }
     *n_counter = *n_counter + strlen(inCurrentInputElem);
   } else {
     *varArgLoaded = false;
@@ -515,20 +635,41 @@ void assignF(char inCurrentInputElem[8192], bool *varArgLoaded,
 }
 
 void assignD(char inCurrentInputElem[8192], bool *varArgLoaded,
-             void *currentVarArg, size_t *n_counter) {
+             void *currentVarArg, size_t *n_counter, int *counterForReturn, struct Specificators Specif) {
   if (currentVarArg != NULL) {
     *varArgLoaded = true;
-   // int checkLoad = *((int *)currentVarArg);
-    *((int *)currentVarArg) = atoi(inCurrentInputElem);
-
-    *n_counter = *n_counter + strlen(inCurrentInputElem);
+    //  printf("%s\n ", inCurrentInputElem);
+      long int checkLoadLong = *((long int *)currentVarArg);
+      short int checkLoadShort = *((short int *)currentVarArg);
+      int checkLoad = *((int *)currentVarArg);
+    if (Specif.length == 'l') {
+      *((long int *)currentVarArg) = atoi(inCurrentInputElem); 
+    } else if (Specif.length == 'h') {
+      *((short *)currentVarArg) = atoi(inCurrentInputElem); 
+    } else {
+       *((int *)currentVarArg) = atoi(inCurrentInputElem); 
+    }
+    if (Specif.length == 'l') {
+    if (checkLoadLong == *((long int *)currentVarArg)) {
+      *counterForReturn = *counterForReturn - 1;
+    }
+    } else if (Specif.length == 'h') {
+      if (checkLoadShort == *((short int *)currentVarArg)) {
+      *counterForReturn = *counterForReturn - 1;
+    }
+    } else {
+    if (checkLoad == *((int *)currentVarArg)) {
+      *counterForReturn = *counterForReturn - 1;
+    }
+    }
+      *n_counter = *n_counter + strlen(inCurrentInputElem);
   } else {
     *varArgLoaded = false;
   }
 }
 
 void assignO(char inCurrentInputElem[8192], bool *varArgLoaded,
-             void *currentVarArg, size_t *n_counter) {
+             void *currentVarArg, size_t *n_counter, int *counterForReturn, struct Specificators Specif) {
   if (currentVarArg != NULL) {
       char *temp = inCurrentInputElem;
       *n_counter = *n_counter + strlen(inCurrentInputElem);
@@ -542,14 +683,36 @@ void assignO(char inCurrentInputElem[8192], bool *varArgLoaded,
       temp++;
     }
     *varArgLoaded = true;
-    *((int *)currentVarArg) = checkSign * strtol(temp, NULL, 8);
+      long int checkLoadLong = *((long int *)currentVarArg);
+      short int checkLoadShort = *((short int *)currentVarArg);
+      int checkLoad = *((int *)currentVarArg);
+    if (Specif.length == 'l') {
+      *((long int *)currentVarArg) = checkSign * strtol(temp, NULL, 8); 
+    } else if (Specif.length == 'h') {
+      *((short *)currentVarArg) = checkSign * strtol(temp, NULL, 8); 
+    } else {
+       *((int *)currentVarArg) = checkSign * strtol(temp, NULL, 8); 
+    }
+    if (Specif.length == 'l') {
+    if (checkLoadLong == *((long int *)currentVarArg)) {
+      *counterForReturn = *counterForReturn - 1;
+    }
+    } else if (Specif.length == 'h') {
+      if (checkLoadShort == *((short int *)currentVarArg)) {
+      *counterForReturn = *counterForReturn - 1;
+    }
+    } else {
+    if (checkLoad == *((int *)currentVarArg)) {
+      *counterForReturn = *counterForReturn - 1;
+    }
+    }
   } else {
     *varArgLoaded = false;
   }
 }
 
 void assignX(char inCurrentInputElem[8192], bool *varArgLoaded,
-             void *currentVarArg, size_t *n_counter) {
+             void *currentVarArg, size_t *n_counter, int *counterForReturn, struct Specificators Specif) {
   if (currentVarArg != NULL) {
       char *temp = inCurrentInputElem;
       *n_counter = *n_counter + strlen(inCurrentInputElem);
@@ -562,18 +725,44 @@ void assignX(char inCurrentInputElem[8192], bool *varArgLoaded,
       checkSign = 1;
       temp++;
     }
-    *varArgLoaded = true;
-    *((int *)currentVarArg) = checkSign * strtol(temp, NULL, 16);
+      long int checkLoadLong = *((long int *)currentVarArg);
+      short int checkLoadShort = *((short int *)currentVarArg);
+      int checkLoad = *((int *)currentVarArg);
+    if (Specif.length == 'l') {
+      *((long int *)currentVarArg) = checkSign * strtol(temp, NULL, 16); 
+    } else if (Specif.length == 'h') {
+      *((short *)currentVarArg) = checkSign * strtol(temp, NULL, 16); 
+    } else {
+       *((int *)currentVarArg) = checkSign * strtol(temp, NULL, 16); 
+    }
+if (Specif.length == 'l') {
+    if (checkLoadLong == *((long int *)currentVarArg)) {
+      *counterForReturn = *counterForReturn - 1;
+    }
+    } else if (Specif.length == 'h') {
+      if (checkLoadShort == *((short int *)currentVarArg)) {
+      *counterForReturn = *counterForReturn - 1;
+    }
+    } else {
+    if (checkLoad == *((int *)currentVarArg)) {
+      *counterForReturn = *counterForReturn - 1;
+    }
+    }
   } else {
     *varArgLoaded = false;
   }
 }
 
 void assignN(char inCurrentInputElem[8192], bool *varArgLoaded,
-             void *currentVarArg, size_t *n_counter) {
+             void *currentVarArg, size_t *n_counter, int *counterForReturn, struct Specificators Specif) {
   if (currentVarArg != NULL) {
     *varArgLoaded = true;
+    int checkLoad = *((int *)currentVarArg);
     *((int *)currentVarArg) = *(int*)n_counter;
+    if (checkLoad == *((int *)currentVarArg)) {
+      //*varArgLoaded = false;
+      *counterForReturn = *counterForReturn - 1;
+    }
     int forNcount = *n_counter;
     while (forNcount != 0) {
       *n_counter = *n_counter + 1;
@@ -585,12 +774,17 @@ void assignN(char inCurrentInputElem[8192], bool *varArgLoaded,
 }
 
 void assignP(char inCurrentInputElem[8192], bool *varArgLoaded,
-             void *currentVarArg, size_t *n_counter) { // при отрицательных значениях какой-то не такой вывод
+             void *currentVarArg, size_t *n_counter, int *counterForReturn, struct Specificators Specif) { // при отрицательных значениях какой-то не такой вывод
   if (currentVarArg != NULL) {
     char *temp = inCurrentInputElem;
     int i; 
     *varArgLoaded = true;
+    long int checkLoad = *((long int *)currentVarArg);
     *((long int *)currentVarArg) = strtol(temp, NULL, 16);
+    if (checkLoad == *((long int *)currentVarArg)) {
+      //*varArgLoaded = false;
+      *counterForReturn = *counterForReturn - 1;
+    }
     *n_counter = *n_counter + strlen(inCurrentInputElem);
   } else {
     *varArgLoaded = false;
@@ -612,16 +806,17 @@ void fillOneByOne(char input[16384], char currentInputElem[8192], int wid, char 
   int i = 0;
   int j = 0;
   bool checkWid = false;
-  
+
   if (wid == -1) {
     checkWid = true;
     
   }
   while (input[i] != '\0' && (j < wid || checkWid)) {
     
-    if (i == 0 && (Specif != 'c' && !(*startParsing))) { // если s, то игнорим все делимы в начале
+    if (i == 0 && (!(*startParsing))) { // если s, то игнорим все делимы в начале
       while (s21_match("\t \n", input[i])) {
         i++;
+        wid--;
       }
     
     }
@@ -641,8 +836,8 @@ void fillOneByOne(char input[16384], char currentInputElem[8192], int wid, char 
     }
     i++;
   }
-  
   currentInputElem[j] = '\0';
+  
   chopLeft(input, i);
 }
 
