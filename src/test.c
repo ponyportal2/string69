@@ -33,9 +33,14 @@ START_TEST(memcmp_test) {
   strcpy(str2, test[_i].str2);
   strcpy(str3, test[_i].str1);
   strcpy(str4, test[_i].str1);
-  ck_assert_int_eq(
-      memcmp(str3, str1, test[_i].n),
-      s21_memcmp(str4, str2, test[_i].n));
+  int i = 0, j = 0;
+  i = memcmp(str3, str1, test[_i].n);
+  j = s21_memcmp(str4, str2, test[_i].n);
+  if (i == -1 || i == 1) {
+    if (j < 0) j = -1;
+    else if (j > 0) j = 1;
+  }
+  ck_assert_int_eq(i, j);
 }
 END_TEST
 
@@ -223,16 +228,16 @@ END_TEST
 
 //to_upper
 START_TEST(to_upper_test) {
-  char str1[SIZE] = "";
-  char str2[SIZE] = "";
   char *s = NULL;
   if (test[_i].str1 != NULL) {
+  char str1[SIZE] = "";
+  char str2[SIZE] = "";
   strcpy(str1, test[_i].str1);
   strcpy(str2, test[_i].str1);
   for (size_t i = 0; i < strlen(test[_i].str1); i++) {
     str2[i] = toupper(str2[i]);
   }
-    s = s21_to_upper(test[_i].str1);
+    s = s21_to_upper(str1);
     ck_assert_pstr_eq(str2, s);
   } else {
     s = s21_to_upper(test[_i].str1);
@@ -244,19 +249,19 @@ END_TEST
 
 //to_lower
 START_TEST(to_lower_test) {
-  char str1[SIZE] = "";
-  char str2[SIZE] = "";
   char* s = NULL;
   if (test[_i].str1 != NULL) {
+  char str1[SIZE] = "";
+  char str2[SIZE] = "";
   strcpy(str1, test[_i].str1);
   strcpy(str2, test[_i].str1);
   for (size_t i = 0; i < strlen(test[_i].str1); i++) {
     str2[i] = tolower(str2[i]);
   }
-    s = s21_to_lower(str2);
+    s = s21_to_lower(str1);
     ck_assert_pstr_eq(str2, s);
   } else {
-    s = s21_to_lower(str2);
+    s = s21_to_lower(test[_i].str1);
     ck_assert_pstr_eq(NULL, s);
   }
     if (s) free(s);
@@ -270,8 +275,8 @@ START_TEST(insert_test) {
   char str3[SIZE] = "";
   char str4[SIZE] = "";
   char* s = NULL;
-  strcpy(str1, test[_i].str2);
-  strcpy(str2, test[_i].str1);
+  strcpy(str2, test[_i].str2);
+  strcpy(str1, test[_i].str1);
   strcpy(str3, test[_i].str1);
   strcpy(str4, test[_i].str2);
   if ((size_t) test[_i].n < strlen(str1)) {
@@ -343,15 +348,16 @@ TCase *create_tc(size_t index, size_t size) {
   return tc;
 }
 
-void print_log() {
+void print_log(double n_checks) {
     FILE *f = fopen("log.xml","r");
     if (f != NULL) {
       printf("\n");
       size_t len = 0;
-      int found_err = 0, found_name = 0, iteration = 0;
+      int found_err = 0, found_name = 0, counter = 0; 
+      double fails = 0;
     char *line = NULL;
     ssize_t read = getline(&line, &len, f);
-    char name[SIZE] = "", num[SIZE] = "";
+    char name[SIZE] = "", num[SIZE] = "", prev_name[SIZE] = "";
     while (read != -1) {
       if (!found_err && found_pattern(line, "failure")) found_err = 1;
       if (!found_name && found_err && found_pattern(line, "<id>")) {
@@ -362,22 +368,40 @@ void print_log() {
       if (found_name && found_pattern(line, "<iteration>")) {
         memset(num, 0, sizeof(num));
         for (size_t i = 0; line[i + 17] != '<'; i++)  num[i] = line[i + 17];
-        iteration = atoi(num);
-        print_error(name, iteration);
+        int iteration = atoi(num);
+        if (strcmp(prev_name, name) != 0) {
+          if (counter > MAX_ERRLOG_SIZE) printf("----------SEE OTHER %d ERRORS IN LOG-------------\n", counter - MAX_ERRLOG_SIZE);
+          counter = 0;
+          }
+        print_error(name, iteration, counter);
+        memset(prev_name, 0, sizeof(prev_name));
+        strcpy(prev_name, name);
+        counter++;
+        fails++;
         found_err = 0;
         found_name = 0;
       }
       read = getline(&line, &len, f);
     }
+    if (counter > MAX_ERRLOG_SIZE) printf("----------SEE OTHER %d ERRORS IN LOG-------------\n", counter - MAX_ERRLOG_SIZE);
+    double perc = 100 - ((fails * 100) /n_checks);
+    printf("%lf%c checks: %d, failures: %d", perc, 37, (int)n_checks, (int)fails);
     if (line) free(line);
       fclose(f);
     }
 }
 
-void print_error(char name_test[SIZE], int index) {
-  printf("-------------------------------------------------\n");
-  printf("FAILED %s №%d:", name_test, index);
-  printf("\t{ |%s|, |%s|, |%d|, |%d| }\n", test[index].str1, test[index].str2, test[index].c, test[index].n);
+void print_error(char name_test[SIZE], int index, int counter) {
+  if (counter <= MAX_ERRLOG_SIZE) {
+    printf("-------------------------------------------------\n");
+    printf("FAILED %s №%d:", name_test, index);
+    printf("\t{ |%s|, |%s|, |%d|, |%d| }\n", test[index].str1, test[index].str2, test[index].c, test[index].n);
+  } else {
+    printf("''''''''''''''''''''''''''''''''''''''''''''''''\n");
+    printf("failed %s №%d:", name_test, index);
+    printf("\t/'%s', '%s', '%d', '%d'/\n", test[index].str1, test[index].str2, test[index].c, test[index].n);
+  }
+  
 }
 
 int found_pattern(char *line, char *pattern) {
@@ -505,7 +529,7 @@ list* set_params(char* filename, list* tmp) {
 void printAllCases(size_t size) {
   printf("Cases\n");
   for (size_t i = 0; i < size; i++) {
-    printf("case %ld: [%s],[%s],[%d],[%d]\n", i, test[i].str1,  test[i].str2,  test[i].c,  test[i].n);
+    printf("case %d: [%s],[%s],[%d],[%d]\n", (int)i, test[i].str1,  test[i].str2,  test[i].c,  test[i].n);
     printf("::::::::::::::::::::::::::::::::::\n");
   }
   printf("\n");
@@ -521,8 +545,12 @@ int main(void) {
   srunner_set_fork_status(suite_runner, CK_NOFORK);
   srunner_set_xml(suite_runner, "log.xml");
   srunner_run_all(suite_runner, CK_NORMAL);
-  int failed_count = srunner_ntests_failed(suite_runner);
-  if (failed_count != 0) print_log();
+  //int failed_count = 
+  srunner_ntests_failed(suite_runner);
+  //if (failed_count != 0) {
+    double N = TC_STRUCT_SIZE * (double)size;
+    print_log(N);
+ // }
   srunner_free(suite_runner);
   destroy(tmp);
   return EXIT_SUCCESS;

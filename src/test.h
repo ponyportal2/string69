@@ -10,6 +10,8 @@
 #include "s21_string.h"
 
 #define SIZE 4096
+#define MAX_ERRLOG_SIZE 3
+#define TC_STRUCT_SIZE 25.000
 #define MAX_C 116
 #define MIN_C 115
 #define MAX_N 7
@@ -55,10 +57,10 @@ struct test_struct test[SIZE] = {
   {"\n", "\0", 'j', 10},
   {"ABOB\nA", "dgdfgdfg123", '\n', 6}, 
   {"ere\0re", "\n\t\0", '8', 5},
-{"0\0\n \0\t habooba\n", "2\0\n 3\t\0 habooba\n", '0', 8},
-{"\00\n \0\t habooba\n", "2\0\n 3\t\0 habooba\n", '0', 8},
-{"\0b\n \0\t habooba\n", "2\n 3\t\0 habooba\n", '0', 8},
-{"b\0\n \0\t habooba\n", "2\n 3\t\0 habooba\n", '0', 8},
+  {"0\0\n \0\t habooba\n", "2\0\n 3\t\0 habooba\n", '0', 8},
+  {"\00\n \0\t habooba\n", "2\0\n 3\t\0 habooba\n", '0', 8},
+  {"\0b\n \0\t habooba\n", "2\n 3\t\0 habooba\n", '0', 8},
+  {"b\0\n \0\t habooba\n", "2\n 3\t\0 habooba\n", '0', 8}
 };
 
 void reverser(char* src, char* pat, char *res);
@@ -68,8 +70,8 @@ list* set_params(char* filename, list* tests_);
 list* add_elem(list* elem, char* str1);
 void destroy(list* root);
 int found_pattern(char *line, char* pattern);
-void print_error(char name_test[SIZE], int index);
-void print_log();
+void print_error(char name_test[SIZE], int index, int counter);
+void print_log(double n_checks);
 void add_cases(TCase** tc, size_t index, size_t size);
 Suite *create_str_suite(size_t size);
 TCase *create_tc(size_t index, size_t size);

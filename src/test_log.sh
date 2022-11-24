@@ -10,7 +10,7 @@ info() {
         echo -e "\n${RED}FAILED CASES${NC}:"
         echo -e "$(grep -e FAIL -e "}" -e "---" -e "|" test.log)"
         echo -e "${RED}-------------------------------------------------${NC}"
-        echo -e "${RED}FAIL${NC}: $(grep "Checks" test.log)"
+        echo -e "${RED}FAIL${NC}: $(grep "checks" test.log)"
         echo -e "${RED}-------------------------------------------------${NC}"
         
 	else
