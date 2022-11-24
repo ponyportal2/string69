@@ -75,6 +75,7 @@ int s21_sscanf(const char *input, const char *format, ...) {
       va_arg(args, void *);
     }
 
+
     // -------------------------------
     if (formatLoaded == true && inputLoaded == true &&
         varArgLoaded == true) {
@@ -169,12 +170,12 @@ void ifSpecIsD(struct Specificators *Specif, char inputStatic[16384], bool *stop
   int startParse = 0;
   int j = 0;
   int wid = (*Specif).width;
-  while (s21_match("\t \n", inputStatic[j]) && (wid > 1 || wid == -1)) {
+  while (s21_match("\t \n", inputStatic[j]) && (wid > 1 || wid <= -1)) {
     j++;
     startParse++;
     wid--;
   }
-
+  
   if (inputStatic[j] == '+' || inputStatic[j] == '-') {
     startParse++;
   }
@@ -209,7 +210,7 @@ void ifSpecIsI(struct Specificators *Specif, char inputStatic[16384], bool *stop
   int startParse = 2;
     int j = 0;
   int wid = (*Specif).width;
-  while (s21_match("\t \n", inputStatic[j]) && (wid > 1 || wid == -1)) {
+  while (s21_match("\t \n", inputStatic[j]) && (wid > 1 || wid <= -1)) {
     j++;
     startParse++;
     wid--;
@@ -282,7 +283,7 @@ void ifSpecIsF(struct Specificators *Specif, char inputStatic[16384], bool *stop
   int startParse = 0;
     int j = 0;
   int wid = (*Specif).width;
-  while (s21_match("\t \n", inputStatic[j]) && (wid > 1 || wid == -1)) {
+  while (s21_match("\t \n", inputStatic[j]) && (wid > 1 || wid <= -1)) {
     j++;
     startParse++;
     wid--;
@@ -353,7 +354,7 @@ void ifSpecIsO(struct Specificators *Specif, char inputStatic[16384], bool *stop
   int startParse = 0;
     int j = 0;
   int wid = (*Specif).width;
-  while (s21_match("\t \n", inputStatic[j]) && (wid > 1 || wid == -1)) {
+  while (s21_match("\t \n", inputStatic[j]) && (wid > 1 || wid <= -1)) {
     j++;
     startParse++;
     wid--;
@@ -391,7 +392,7 @@ void ifSpecIsX(struct Specificators *Specif, char inputStatic[16384], bool *stop
   int startParse = 0;
     int j = 0;
   int wid = (*Specif).width;
-  while (s21_match("\t \n", inputStatic[j]) && (wid > 1 || wid == -1)) {
+  while (s21_match("\t \n", inputStatic[j]) && (wid > 1 || wid <= -1)) {
     j++;
     startParse++;
     wid--;
@@ -433,7 +434,7 @@ void ifSpecIsP(struct Specificators *Specif, char inputStatic[16384], bool *stop
   int startParse = 0;
     int j = 0;
   int wid = (*Specif).width;
-  while (s21_match("\t \n", inputStatic[j]) && (wid > 1 || wid == -1)) {
+  while (s21_match("\t \n", inputStatic[j]) && (wid > 1 || wid <= -1)) {
     j++;
     startParse++;
     wid--;
@@ -806,22 +807,22 @@ void fillOneByOne(char input[16384], char currentInputElem[8192], int wid, char 
   int i = 0;
   int j = 0;
   bool checkWid = false;
-
   if (wid == -1) {
     checkWid = true;
     
   }
   while (input[i] != '\0' && (j < wid || checkWid)) {
     
-    if (i == 0 && (!(*startParsing))) { // если s, то игнорим все делимы в начале
-      while (s21_match("\t \n", input[i])) {
+    if (i == 0 && (Specif == 's' || !(*startParsing))) { // если s, то игнорим все делимы в начале
+      while (s21_match("\t \n", input[i]) && wid > 0) {
         i++;
         wid--;
+       
       }
     
     }
     *startParsing = false;
-    
+ 
     if (s21_match("\t \n", input[i]) == false) {
       currentInputElem[j] = input[i];
       j++;
@@ -835,6 +836,7 @@ void fillOneByOne(char input[16384], char currentInputElem[8192], int wid, char 
       j++;
     }
     i++;
+  
   }
   currentInputElem[j] = '\0';
   
@@ -843,6 +845,7 @@ void fillOneByOne(char input[16384], char currentInputElem[8192], int wid, char 
 
 void chopLeft(char input[16384], int howMany) {
   int j = 0;
+  
   for (int i = howMany; input[i] != '\0'; i++, j++) {
 
       input[j] = input[i];

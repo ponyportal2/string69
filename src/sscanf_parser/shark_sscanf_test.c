@@ -13,16 +13,16 @@ int main(int argc, char **argv) {
   char testInt[128][128] = {0};
 
     long a1 = 0, a2 = 0, b1 = 0, b2 = 0, c1 = 0, c2 = 0, d1 = 0, d2 = 0;
-    const char str[] = "-asd1 -2 +345 -4 +5";
-    const char fstr[] = "%c %*s %s %c";
+    const char str[] = "-1337     +1     -1    -1";
+    const char fstr[] = "%15ld %ld %ld %ld";
 
-    int16_t res1 = s21_sscanf(str, fstr, testInt[0], testInt[1], testInt[2], testInt[3]);
-    int16_t res2 = sscanf(str, fstr, testInt[4], testInt[5], testInt[6], testInt[7]);
+    int16_t res1 = s21_sscanf(str, fstr, &a1, &b1, &c1, &d1);
+    int16_t res2 = sscanf(str, fstr, &a2, &b2, &c2, &d2);
     printf("%d %d\n", res1, res2);
-    printf("%ld %s\n", a1, testInt[4]);
-    printf("%ld %s\n", b1, testInt[5]);
-    printf("%ld %s\n", c1, testInt[6]);
-    printf("%ld %s\n", d1, testInt[7]);
+    printf("%ld %ld\n", a1, a2);
+    printf("%ld %ld\n", b1, b2);
+    printf("%ld %ld\n", c1, c2);
+    printf("%ld %ld\n", d1, d2);
   
 // int testInt[] = {0, 1, 2, 3, 4, 5, 6};
 
