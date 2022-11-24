@@ -199,7 +199,8 @@ void ifSpecIsD(struct Specificators *Specif, char inputStatic[16384], bool *stop
         if (findNotNumber != 0) {
           (*Specif).width = i;
         }
-        if ((*Specif).width == 0) {
+        if ((*Specif).width == startParse) {
+          
           *stopMove = true;
         }
       }
@@ -246,7 +247,7 @@ void ifSpecIsI(struct Specificators *Specif, char inputStatic[16384], bool *stop
         if (findNotNumber != 0) {
           (*Specif).width = i;
         }
-        if ((*Specif).width == 0) {
+        if ((*Specif).width == startParse) {
           *stopMove = true;
         }
       }
@@ -270,7 +271,7 @@ void ifSpecIsI(struct Specificators *Specif, char inputStatic[16384], bool *stop
         if (findNotNumber != 0) {
           (*Specif).width = i;
         }
-        if ((*Specif).width == 0) {
+        if ((*Specif).width == startParse) {
           *stopMove = true;
         }
       }
@@ -341,7 +342,7 @@ void ifSpecIsF(struct Specificators *Specif, char inputStatic[16384], bool *stop
         if (findNotNumber != 0) {
           (*Specif).width = i;
         }
-        if ((*Specif).width == 0) {
+        if ((*Specif).width == startParse) {
           *stopMove = true;
         }
       }
@@ -381,7 +382,7 @@ void ifSpecIsO(struct Specificators *Specif, char inputStatic[16384], bool *stop
         if (findNotNumber != 0) {
           (*Specif).width = i;
         }
-        if ((*Specif).width == 0) {
+        if ((*Specif).width == startParse) {
           *stopMove = true;
         }
       }
@@ -423,7 +424,7 @@ void ifSpecIsX(struct Specificators *Specif, char inputStatic[16384], bool *stop
         if (findNotNumber != 0) {
           (*Specif).width = i;
         }
-        if ((*Specif).width == 0) {
+        if ((*Specif).width == startParse) {
           *stopMove = true;
         }
       }
@@ -465,7 +466,7 @@ void ifSpecIsP(struct Specificators *Specif, char inputStatic[16384], bool *stop
         if (findNotNumber != 0) {
           (*Specif).width = i;
         }
-        if ((*Specif).width == 0) {
+        if ((*Specif).width == startParse) {
           *stopMove = true;
         }
       }
@@ -807,17 +808,16 @@ void fillOneByOne(char input[16384], char currentInputElem[8192], int wid, char 
   int i = 0;
   int j = 0;
   bool checkWid = false;
-  if (wid == -1) {
+  if (wid <= -1) {
     checkWid = true;
     
   }
   while (input[i] != '\0' && (j < wid || checkWid)) {
     
-    if (i == 0 && (Specif == 's' || !(*startParsing))) { // если s, то игнорим все делимы в начале
-      while (s21_match("\t \n", input[i]) && wid > 0) {
+    if (i == 0 && (!(*startParsing))) { // если s, то игнорим все делимы в начале
+      while (s21_match("\t \n", input[i]) && (wid > 0 || checkWid || Specif == 'c')) {
         i++;
         wid--;
-       
       }
     
     }
@@ -826,7 +826,7 @@ void fillOneByOne(char input[16384], char currentInputElem[8192], int wid, char 
     if (s21_match("\t \n", input[i]) == false) {
       currentInputElem[j] = input[i];
       j++;
-    } else if (Specif != 'c') { // если поймали разделитель - прерываем
+    } else if (Specif == 's') { // если поймали разделитель - прерываем
       currentInputElem[j] = '\0';
       i--;
       j = wid;
@@ -839,7 +839,6 @@ void fillOneByOne(char input[16384], char currentInputElem[8192], int wid, char 
   
   }
   currentInputElem[j] = '\0';
-  
   chopLeft(input, i);
 }
 
