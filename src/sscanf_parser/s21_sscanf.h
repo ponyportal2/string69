@@ -6,6 +6,7 @@ struct Specificators {
     int width, argWidth;
     char length;
     char Specif;
+    char Space;
 };
 
 int s21_sscanf(const char *input, const char *format, ...);
@@ -38,12 +39,12 @@ void ifSpecIsO(struct Specificators *Specif, char inputStatic[16384], bool *stop
 void ifSpecIsX(struct Specificators *Specif, char inputStatic[16384], bool *stopMove);
 void ifSpecIsP(struct Specificators *Specif, char inputStatic[16384], bool *stopMove);
 void inputParsing(char inputStatic[16384], char currentInputElem[8192], int wid,
-                  bool *inputLoaded, char Specif, char checkDelim, bool *startParsing);
+                  bool *inputLoaded, struct Specificators Specif, char checkDelim, bool *startParsing, bool checkSpace);
 void varArgParsingAndAssignment(char currentFormatElem[8192],
                                 char currentInputElem[8192], bool *varArgLoaded,
                                 void *currentVarArg, struct Specificators Specif, size_t *n_counter, int *counterForReturn);
 char *strtokChop(char *str, const char *delim, char *leftOver);
-void fillOneByOne(char input[16384], char currentInputElem[8192], int wid, char Specif, char checkDelim, bool *startParsing);
+void fillOneByOne(char input[16384], char currentInputElem[8192], int wid, struct Specificators Specif, char checkDelim, bool *startParsing, bool checkSpace);
 void chopLeft(char input[16384], int howMany);
 
 // Спецификатор формата для сканирующих функций следует прототипу:

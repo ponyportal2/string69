@@ -31,26 +31,41 @@ int s21_sscanf(const char *input, const char *format, ...) {
   int counterForReturn = 0;
   bool startParsing = true;
   bool stopMove = false;
+  bool checkSpace = false;
+  bool checkLoaded = false;
+  struct Specificators Specif = {-1, -1, (char)NULL, (char)NULL, (char)NULL};
   while (status != MISMADCH_ && status != ENDET_) {
     bool formatLoaded = false;
     bool inputLoaded = false;
     bool varArgLoaded = false;
-    struct Specificators Specif = {-1, -1, (char)NULL, (char)NULL};
+    if (Specif.Space == ' ') {
+      checkSpace = true;
+    } else {
+      checkSpace = false;
+    }
+    Specif.width = -1;
+    Specif.argWidth = -1;
+    Specif.length = (char)NULL;
+    Specif.Specif = (char)NULL;
+    Specif.Space = (char)NULL;
+    
+
+
     // CURRENT FORMAT ELEMENT PARSING:
     char checkDelim = formatParsing(formatStatic, currentFormatElem, &formatLoaded, &Specif, &checkStartScanf, &status);
+
     if (status == MISMADCH_) {
       break; //мб тут поменять брей и все что ниже запихать под условие
     }
     // printf("\n[%s]\n", currentFormatElem);
-    if (Specif.argWidth == 1) { //если  *, то ширину берем из args
-      Specif.width = va_arg(args, int);
-    }
+
    
     checkFormatError(Specif, &status);  //сочетается ли длина со спецификатором
 
-    if (Specif.Specif == 'c' && Specif.width == -1) {
+    if (Specif.Specif == 'c' && (Specif.width == -1 || Specif.width == 0)) {
       Specif.width = 1;
     }
+    
 
     ifSpecIsD(&Specif, inputStatic, &stopMove);
     ifSpecIsI(&Specif, inputStatic, &stopMove);
@@ -58,33 +73,58 @@ int s21_sscanf(const char *input, const char *format, ...) {
     ifSpecIsO(&Specif, inputStatic, &stopMove);
     ifSpecIsX(&Specif, inputStatic, &stopMove);
     ifSpecIsP(&Specif, inputStatic, &stopMove);
-    
+            
     // CURRENT INPUT ELEMENT PARSING:
     if (Specif.Specif != 'n' && !stopMove) {
-    inputParsing(inputStatic, currentInputElem, Specif.width, &inputLoaded, Specif.Specif, checkDelim, &startParsing);
+      
+    inputParsing(inputStatic, currentInputElem, Specif.width, &inputLoaded, Specif, checkDelim, &startParsing, checkSpace);
     
     } else {
       inputLoaded = true;
     }
     // printf("\n[%s]\n", currentInputElem);
     // CURRENT VARARG ELEMENT PARSING:
+    
     if (!stopMove) {
+      
+      if (Specif.argWidth != 1) {
     varArgParsingAndAssignment(currentFormatElem, currentInputElem,
                                &varArgLoaded, va_arg(args, void *), Specif, &n_counter, &counterForReturn);
+      } else {
+        varArgLoaded = true;
+        
+        counterForReturn--;
+      }
     } else {
-      va_arg(args, void *);
+      
+        if (counterForReturn == 0) {
+            varArgParsingAndAssignment(currentFormatElem, currentInputElem,
+                               &varArgLoaded, va_arg(args, void *), Specif, &n_counter, &counterForReturn);
+          if (!varArgLoaded && !checkLoaded) {
+            
+            counterForReturn = EOF;
+       
+          } else {
+            
+            checkLoaded = true;
+          }
+      } 
     }
-
-
+    
     // -------------------------------
     if (formatLoaded == true && inputLoaded == true &&
         varArgLoaded == true) {
+          
+          if (!checkLoaded) {
           counterForReturn++;
+          }
+      
     } else {
       status = ENDET_;
     }
   }
   va_end(args);
+  
   return counterForReturn;  // to fix, I don't know what sscanf should return and why
 }
 
@@ -124,7 +164,7 @@ char formatParsing(char formatStatic[16384], char currentFormatElem[8192],
     if (*currentFormatElem == '*') {
       (*Specif).argWidth = 1;
       currentFormatElem++;
-    } else if (*currentFormatElem >= '1' && *currentFormatElem <= '9') {
+    } else if (*currentFormatElem >= '0' && *currentFormatElem <= '9') {
         (*Specif).width = atoi(currentFormatElem);
       while (*currentFormatElem >= '0' && *currentFormatElem <= '9') {
         currentFormatElem++;
@@ -139,6 +179,11 @@ char formatParsing(char formatStatic[16384], char currentFormatElem[8192],
     sprintf(nextSym, "%c", *currentFormatElem);
     if (strpbrk(nextSym, "cdieEfgGosuxXpn")) {
       (*Specif).Specif = *currentFormatElem;
+      currentFormatElem++;
+      sprintf(nextSym, "%c", *currentFormatElem);
+          if (strpbrk(nextSym, "\n \t")) {
+            (*Specif).Space = ' ';
+          }
     } else if (nextSym[0] == '%') {
      
     } else {
@@ -170,15 +215,16 @@ void ifSpecIsD(struct Specificators *Specif, char inputStatic[16384], bool *stop
   int startParse = 0;
   int j = 0;
   int wid = (*Specif).width;
-  while (s21_match("\t \n", inputStatic[j]) && (wid > 1 || wid <= -1)) {
+  
+  while (s21_match("\t \n", inputStatic[j])) {
     j++;
     startParse++;
-    wid--;
   }
-  
-  if (inputStatic[j] == '+' || inputStatic[j] == '-') {
+
+  if ((inputStatic[j] == '+' || inputStatic[j] == '-') && (wid > 1 || wid <= -1)) {
     startParse++;
   }
+ 
   if ((*Specif).Specif == 'd' || (*Specif).Specif == 'u') {//если у нас какое то число и нет ширины - ширина пока встречаем в строке цифры. 
       if ((*Specif).width == -1) {
         (*Specif).width = startParse;
@@ -187,67 +233,77 @@ void ifSpecIsD(struct Specificators *Specif, char inputStatic[16384], bool *stop
         }
         if ((*Specif).width == startParse) {
           *stopMove = true;
+         
         }
       } else { // если задана ширина и в строке встретилось не число раньше, чем кончилась ширина, то это становится новой шириной, а не число остается в строке
         int findNotNumber = (*Specif).width;
+        (*Specif).width = startParse;
         int i = startParse;
-       
+        bool checkIfAnyNumber = false;
         while (inputStatic[i] >= '0' && inputStatic[i] <= '9' && findNotNumber > 0) {
           findNotNumber--;
           i++;
+          (*Specif).width++;
+          checkIfAnyNumber = true;
         }
-        if (findNotNumber != 0) {
-          (*Specif).width = i;
-        }
-        if ((*Specif).width == startParse) {
-          
+        if (!checkIfAnyNumber) {
           *stopMove = true;
         }
       }
+      
     }
 }
 
 void ifSpecIsI(struct Specificators *Specif, char inputStatic[16384], bool *stopMove) {
   int startParse = 2;
     int j = 0;
+    
   int wid = (*Specif).width;
-  while (s21_match("\t \n", inputStatic[j]) && (wid > 1 || wid <= -1)) {
+  while (s21_match("\t \n", inputStatic[j])) {
     j++;
     startParse++;
-    wid--;
   }
-  if (inputStatic[j] == '+' || inputStatic[j] == '-') {
+  
+  if ((inputStatic[j] == '+' || inputStatic[j] == '-') && (wid > 1 || wid <= -1)) {
     startParse++;
   }
+  
   if ((*Specif).Specif == 'i') {
-  if ((inputStatic[0] != '0' && !((inputStatic[0] == '+' || inputStatic[0] == '-'))) ||
-      (inputStatic[1] != '0' && ((inputStatic[0] == '+' || inputStatic[0] == '-'))) ){ // если первое не 0 - то число десятичное
+     
+  if  (inputStatic[startParse - 2] != '0' && inputStatic[startParse - 1] != 'x'){ // если первое не 0 - то число десятичное
+        (*Specif).Specif ='d';
+        
         ifSpecIsD(Specif, inputStatic, stopMove);
   } else {
     if (inputStatic[startParse - 1] == 'x') { // если второе х - то шестнадцатиричное
       if ((*Specif).width == -1) {
+       
         (*Specif).width = startParse;
         while ((inputStatic[(*Specif).width] >= '0' && inputStatic[(*Specif).width] <= '9')
         || (inputStatic[(*Specif).width] >= 'a' && inputStatic[(*Specif).width] <= 'f')
         || (inputStatic[(*Specif).width] >= 'A' && inputStatic[(*Specif).width] <= 'F')) {
           (*Specif).width++;
         }
+        
         if ((*Specif).width == startParse) {
           *stopMove = true;
+          
         }
       } else {
         int findNotNumber = (*Specif).width;
         int i = startParse;
+        (*Specif).width = startParse - 2;
+        bool checkIfAnyNumber = false;
         while (((inputStatic[i] >= '0' && inputStatic[i] <= '9')
         || (inputStatic[i] >= 'a' && inputStatic[i] <= 'f')
         || (inputStatic[i] >= 'A' && inputStatic[i] <= 'F')) && findNotNumber > 0) {
           findNotNumber--;
           i++;
+          (*Specif).width++;
+          checkIfAnyNumber = true;
         }
-        if (findNotNumber != 0) {
-          (*Specif).width = i;
-        }
-        if ((*Specif).width == startParse) {
+
+        if (!checkIfAnyNumber) {
           *stopMove = true;
         }
       }
@@ -264,20 +320,25 @@ void ifSpecIsI(struct Specificators *Specif, char inputStatic[16384], bool *stop
       } else {
         int findNotNumber = (*Specif).width;
         int i = startParse;
+        (*Specif).width = startParse - 1;
+        bool checkIfAnyNumber = false;
+        
         while (inputStatic[i] >= '0' && inputStatic[i] <= '7' && findNotNumber > 0) {
           findNotNumber--;
           i++;
+          (*Specif).width++;
+          checkIfAnyNumber = true;
         }
-        if (findNotNumber != 0) {
-          (*Specif).width = i;
-        }
-        if ((*Specif).width == startParse) {
+
+        if (!checkIfAnyNumber) {
           *stopMove = true;
         }
       }
     }
   }
+
 }
+
 }
 
 void ifSpecIsF(struct Specificators *Specif, char inputStatic[16384], bool *stopMove) {
@@ -364,13 +425,14 @@ void ifSpecIsO(struct Specificators *Specif, char inputStatic[16384], bool *stop
     startParse++;
   }
   if ((*Specif).Specif == 'o') {//если у нас какое то число и нет ширины - ширина пока встречаем в строке цифры. 
-      if ((*Specif).width == -1) {
+      if ((*Specif).width <= -1) {
         (*Specif).width = startParse;
         while (inputStatic[(*Specif).width] >= '0' && inputStatic[(*Specif).width] <= '7') {
           (*Specif).width++;
         }
         if ((*Specif).width == startParse) {
           *stopMove = true;
+         
         }
       } else { // если задана ширина и в строке встретилось не число раньше, чем кончилась ширина, то это становится новой шириной, а не число остается в строке
         int findNotNumber = (*Specif).width;
@@ -384,9 +446,11 @@ void ifSpecIsO(struct Specificators *Specif, char inputStatic[16384], bool *stop
         }
         if ((*Specif).width == startParse) {
           *stopMove = true;
+          
         }
       }
     }
+
 }
 
 void ifSpecIsX(struct Specificators *Specif, char inputStatic[16384], bool *stopMove) {
@@ -411,24 +475,29 @@ void ifSpecIsX(struct Specificators *Specif, char inputStatic[16384], bool *stop
         }
         if ((*Specif).width == startParse) {
           *stopMove = true;
+        
         }
       } else { // если задана ширина и в строке встретилось не число раньше, чем кончилась ширина, то это становится новой шириной, а не число остается в строке
         int findNotNumber = (*Specif).width;
+        
         int i = startParse;
-        while ((inputStatic[(*Specif).width] >= '0' && inputStatic[(*Specif).width] <= '9')
-        || (inputStatic[(*Specif).width] >= 'a' && inputStatic[(*Specif).width] <= 'f')
-        || (inputStatic[(*Specif).width] >= 'A' && inputStatic[(*Specif).width] <= 'F') && findNotNumber > 0) {
+        while ((inputStatic[i] >= '0' && inputStatic[i] <= '9')
+        || (inputStatic[i] >= 'a' && inputStatic[i] <= 'f')
+        || (inputStatic[i] >= 'A' && inputStatic[i] <= 'F') && findNotNumber > 0) {
           findNotNumber--;
           i++;
         }
+   
         if (findNotNumber != 0) {
           (*Specif).width = i;
         }
         if ((*Specif).width == startParse) {
           *stopMove = true;
+          
         }
       }
     }
+
 }
 
 void ifSpecIsP(struct Specificators *Specif, char inputStatic[16384], bool *stopMove) {
@@ -483,7 +552,7 @@ void varArgParsingAndAssignment(char currentFormatElem[8192],
   // needed, cause passing static arrays too deep breaks them for some reason:
   char tempCurrentInputElem[8192] = {0};
   strcpy(tempCurrentInputElem, currentInputElem);
- 
+
   if (Specif.Specif == 'i') {// тут вместо строки уже можно структурой пользоваться
 
     // [0] part is of course incorrect , properly parsed format
@@ -514,23 +583,29 @@ void assignI(char inCurrentInputElem[8192], bool *varArgLoaded,
      *n_counter = *n_counter + strlen(inCurrentInputElem);
     int checkSign = 1;
     int forNcount = 0;
-    int i; // чтобы перепрыгнуть знак 
-    if (inCurrentInputElem[0] == '-') {
-
+    int i = 0; // чтобы перепрыгнуть знак 
+   
+    while (s21_match("\t \n", inCurrentInputElem[i])) {
+        i++;
+        temp++;
+    }
+    if (inCurrentInputElem[i] == '-') {
       checkSign = -1;
-      i = 2; 
+      i = i+2; 
       temp++;
-    } else if (inCurrentInputElem[0] == '+') {
+    } else if (inCurrentInputElem[i] == '+') {
       checkSign = 1;
-      i = 2;
+      i = i+2;
       temp++;
     } else {
-      i = 1;
+      i = i+1;
     }
     *varArgLoaded = true;
+    
       long int checkLoadLong = *((long int *)currentVarArg);
       short int checkLoadShort = *((short int *)currentVarArg);
       int checkLoad = *((int *)currentVarArg);
+     
     if (inCurrentInputElem[i] == 'x') { 
       temp++;
       temp++;
@@ -541,7 +616,9 @@ void assignI(char inCurrentInputElem[8192], bool *varArgLoaded,
       *((short *)currentVarArg) = checkSign * strtol(temp, NULL, 16); 
     } else {
        *((int *)currentVarArg) = checkSign * strtol(temp, NULL, 16); 
+       
     }
+    
     } else if (inCurrentInputElem[i - 1] == '0') {
       temp++;
     if (Specif.length == 'l') {
@@ -563,15 +640,15 @@ void assignI(char inCurrentInputElem[8192], bool *varArgLoaded,
     }
     if (Specif.length == 'l') {
     if (checkLoadLong == *((long int *)currentVarArg)) {
-      *counterForReturn = *counterForReturn - 1;
+      //*counterForReturn = *counterForReturn - 1;
     }
     } else if (Specif.length == 'h') {
       if (checkLoadShort == *((short int *)currentVarArg)) {
-      *counterForReturn = *counterForReturn - 1;
+      //*counterForReturn = *counterForReturn - 1;
     }
     } else {
     if (checkLoad == *((int *)currentVarArg)) {
-      *counterForReturn = *counterForReturn - 1;
+      //*counterForReturn = *counterForReturn - 1;
     }
     }
 
@@ -595,12 +672,12 @@ void assignS(char currentInputElem[8192], bool *varArgLoaded,
     if (Specif.length == 'l') {
     if (strcmp((char*)checkLoadLong, currentVarArg)) {
       //*varArgLoaded = false;
-      *counterForReturn = *counterForReturn - 1;
+      //*counterForReturn = *counterForReturn - 1;
     }
     } else {
       if (strcmp(checkLoad, currentVarArg)) {
       //*varArgLoaded = false;
-      *counterForReturn = *counterForReturn - 1;
+      //*counterForReturn = *counterForReturn - 1;
     }
     }
   *n_counter = *n_counter + strlen((char*)currentVarArg);
@@ -623,11 +700,11 @@ void assignF(char inCurrentInputElem[8192], bool *varArgLoaded,
     }
     if (Specif.length == 'L') {
     if (checkLoad == *((long double *)currentVarArg)) {
-      *counterForReturn = *counterForReturn - 1;
+      //*counterForReturn = *counterForReturn - 1;
     }
     } else {
     if (checkLoad == *((float *)currentVarArg)) {
-      *counterForReturn = *counterForReturn - 1;
+      //*counterForReturn = *counterForReturn - 1;
     }
     }
     *n_counter = *n_counter + strlen(inCurrentInputElem);
@@ -638,30 +715,34 @@ void assignF(char inCurrentInputElem[8192], bool *varArgLoaded,
 
 void assignD(char inCurrentInputElem[8192], bool *varArgLoaded,
              void *currentVarArg, size_t *n_counter, int *counterForReturn, struct Specificators Specif) {
+
   if (currentVarArg != NULL) {
+  
     *varArgLoaded = true;
     //  printf("%s\n ", inCurrentInputElem);
       long int checkLoadLong = *((long int *)currentVarArg);
       short int checkLoadShort = *((short int *)currentVarArg);
       int checkLoad = *((int *)currentVarArg);
+ 
     if (Specif.length == 'l') {
       *((long int *)currentVarArg) = atoi(inCurrentInputElem); 
     } else if (Specif.length == 'h') {
       *((short *)currentVarArg) = atoi(inCurrentInputElem); 
     } else {
        *((int *)currentVarArg) = atoi(inCurrentInputElem); 
+      
     }
     if (Specif.length == 'l') {
     if (checkLoadLong == *((long int *)currentVarArg)) {
-      *counterForReturn = *counterForReturn - 1;
+      //*counterForReturn = *counterForReturn - 1;
     }
     } else if (Specif.length == 'h') {
       if (checkLoadShort == *((short int *)currentVarArg)) {
-      *counterForReturn = *counterForReturn - 1;
+      //*counterForReturn = *counterForReturn - 1;
     }
     } else {
     if (checkLoad == *((int *)currentVarArg)) {
-      *counterForReturn = *counterForReturn - 1;
+      //*counterForReturn = *counterForReturn - 1;
     }
     }
       *n_counter = *n_counter + strlen(inCurrentInputElem);
@@ -697,15 +778,15 @@ void assignO(char inCurrentInputElem[8192], bool *varArgLoaded,
     }
     if (Specif.length == 'l') {
     if (checkLoadLong == *((long int *)currentVarArg)) {
-      *counterForReturn = *counterForReturn - 1;
+      //*counterForReturn = *counterForReturn - 1;
     }
     } else if (Specif.length == 'h') {
       if (checkLoadShort == *((short int *)currentVarArg)) {
-      *counterForReturn = *counterForReturn - 1;
+      //*counterForReturn = *counterForReturn - 1;
     }
     } else {
     if (checkLoad == *((int *)currentVarArg)) {
-      *counterForReturn = *counterForReturn - 1;
+      //*counterForReturn = *counterForReturn - 1;
     }
     }
   } else {
@@ -727,6 +808,7 @@ void assignX(char inCurrentInputElem[8192], bool *varArgLoaded,
       checkSign = 1;
       temp++;
     }
+     *varArgLoaded = true;
       long int checkLoadLong = *((long int *)currentVarArg);
       short int checkLoadShort = *((short int *)currentVarArg);
       int checkLoad = *((int *)currentVarArg);
@@ -735,19 +817,20 @@ void assignX(char inCurrentInputElem[8192], bool *varArgLoaded,
     } else if (Specif.length == 'h') {
       *((short *)currentVarArg) = checkSign * strtol(temp, NULL, 16); 
     } else {
+      
        *((int *)currentVarArg) = checkSign * strtol(temp, NULL, 16); 
     }
 if (Specif.length == 'l') {
     if (checkLoadLong == *((long int *)currentVarArg)) {
-      *counterForReturn = *counterForReturn - 1;
+      //*counterForReturn = *counterForReturn - 1;
     }
     } else if (Specif.length == 'h') {
       if (checkLoadShort == *((short int *)currentVarArg)) {
-      *counterForReturn = *counterForReturn - 1;
+      //*counterForReturn = *counterForReturn - 1;
     }
     } else {
     if (checkLoad == *((int *)currentVarArg)) {
-      *counterForReturn = *counterForReturn - 1;
+      //*counterForReturn = *counterForReturn - 1;
     }
     }
   } else {
@@ -763,7 +846,7 @@ void assignN(char inCurrentInputElem[8192], bool *varArgLoaded,
     *((int *)currentVarArg) = *(int*)n_counter;
     if (checkLoad == *((int *)currentVarArg)) {
       //*varArgLoaded = false;
-      *counterForReturn = *counterForReturn - 1;
+      //*counterForReturn = *counterForReturn - 1;
     }
     int forNcount = *n_counter;
     while (forNcount != 0) {
@@ -785,7 +868,7 @@ void assignP(char inCurrentInputElem[8192], bool *varArgLoaded,
     *((long int *)currentVarArg) = strtol(temp, NULL, 16);
     if (checkLoad == *((long int *)currentVarArg)) {
       //*varArgLoaded = false;
-      *counterForReturn = *counterForReturn - 1;
+      //*counterForReturn = *counterForReturn - 1;
     }
     *n_counter = *n_counter + strlen(inCurrentInputElem);
   } else {
@@ -794,41 +877,53 @@ void assignP(char inCurrentInputElem[8192], bool *varArgLoaded,
 }
 
 void inputParsing(char inputFlip[16384], char currentInputElem[8192], int wid,
-                  bool *inputLoaded, char Specif, char checkDelim, bool *startParsing) {
+                  bool *inputLoaded, struct Specificators Specif, char checkDelim, bool *startParsing, bool checkSpace) {
   static bool flipFlop = false;
   static char inputFlop[16384] = {0};
-  fillOneByOne(inputFlip, currentInputElem, wid, Specif, checkDelim, startParsing);
+  fillOneByOne(inputFlip, currentInputElem, wid, Specif, checkDelim, startParsing, checkSpace);
 
   if (strcmp(currentInputElem, OUR_ERROR_) != 0) {
     *inputLoaded = true;
   }
 }
 
-void fillOneByOne(char input[16384], char currentInputElem[8192], int wid, char Specif, char checkDelim, bool *startParsing) {
+void fillOneByOne(char input[16384], char currentInputElem[8192], int wid, struct Specificators Specif, 
+char checkDelim, bool *startParsing, bool checkSpace) {
   int i = 0;
   int j = 0;
   bool checkWid = false;
   if (wid <= -1) {
     checkWid = true;
-    
+  }
+  if (Specif.Specif == 's') {
+    *startParsing = false; // вероятно это даже и не надо
   }
   while (input[i] != '\0' && (j < wid || checkWid)) {
-    
-    if (i == 0 && (!(*startParsing))) { // если s, то игнорим все делимы в начале
-      while (s21_match("\t \n", input[i]) && (wid > 0 || checkWid || Specif == 'c')) {
+    if ((i == 0 && (!(*startParsing)))) {
+      // если s, то игнорим все делимы в начале
+    if ((Specif.Specif == 'c' && checkSpace) || Specif.Specif != 'c') {
+      while (s21_match("\t \n", input[i]) && (wid > 0 || checkWid || Specif.Specif == 's' || (Specif.Specif == 'c' && checkSpace))) {
         i++;
+     
+        if (Specif.Specif != 's') {
         wid--;
+        }
       }
+    }
     
     }
+ 
     *startParsing = false;
  
     if (s21_match("\t \n", input[i]) == false) {
       currentInputElem[j] = input[i];
+      
       j++;
-    } else if (Specif == 's') { // если поймали разделитель - прерываем
+    } else if (Specif.Specif == 's') { // если поймали разделитель - прерываем
       currentInputElem[j] = '\0';
+     
       i--;
+      
       j = wid;
       checkWid = false;
     } else {
@@ -838,7 +933,9 @@ void fillOneByOne(char input[16384], char currentInputElem[8192], int wid, char 
     i++;
   
   }
+   
   currentInputElem[j] = '\0';
+  
   chopLeft(input, i);
 }
 
