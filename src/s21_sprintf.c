@@ -32,7 +32,7 @@ void strchr_help(char* str1, char s);
 int main() {
   char* buf = calloc(1000, sizeof(char));
   int test =
-      s21_sprintf(buf, "Takaya shtuka: % +-6.2f %*d %43c %24.21s%%010d %0#f",
+      s21_sprintf(buf, "Takaya shtuka: % +-6.2fjfjhfhf %*d %43c %24.21s%%010d ewq%0#fcxzc",
                   3.1415, 100, 'C', "Far");
   return 0;
 }
@@ -43,7 +43,10 @@ int s21_sprintf(char* buff, const char* format, ...) {
   char* pointerToFormatStr = calloc(strlen(format), sizeof(char));
   strcpy(pointerToFormatStr, format);
   short status = 0;
-  char* pointerToSpec = strstr(pointerToFormatStr, "%");
+  char* pointerToSpec = NULL;
+  strcat(buff, pointerToFormatStr);
+  strchr_help(buff, '%');
+  pointerToSpec = strstr(pointerToFormatStr, "%");
   while (pointerToSpec != NULL) {  //заменил условие в while
     bool formatLoaded = false;
     bool outputLoaded = false;
@@ -59,8 +62,8 @@ int s21_sprintf(char* buff, const char* format, ...) {
         spec.flag_minus, spec.flag_plus, spec.flag_space, spec.flag_zero,
         spec.flag_noargumet, spec.flag_hash, spec.width, spec.precision, spec.length,
         spec.type);
-    strcpy(buff, pointerToSpec);
-    strchr_help(buff, '%');
+        strcat(buff, pointerToSpec);
+        strchr_help(buff, '%');
     if (strlen(pointerToSpec) == 1 && pointerToSpec[0] == '%') {
       pointerToSpec = NULL;
     } else {
