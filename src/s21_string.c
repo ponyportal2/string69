@@ -536,7 +536,7 @@ void *s21_trim(const char *src, const char *trim_chars) {
         break;
       }
     }
-    if (counts + counte <= s21_strlen(src)) {
+    if (counts + counte <= s21_strlen(src) && (counts + counte) != 0) {
       temp = malloc(sizeof(char) * (s21_strlen(src) - counts - counte+1));
       size_t i = 0;
       for (i = counts; i < s21_strlen(src) - counte; i++) {
