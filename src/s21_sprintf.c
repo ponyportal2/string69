@@ -38,7 +38,10 @@ bool is_digit(char type);
 
 int main() {
   char* buf = calloc(1000, sizeof(char));
-  int test = s21_sprintf(buf, "Takaya shtuka: %f gj", 300.005);
+  int test = s21_sprintf(buf, "Takaya shtuka: %+i gj %9.2f %s\n", 300,
+                         9999999.08, "zepi");
+  printf("Takaya shtuka: %+i gj %9.2f %s\n", 300, 9999999.08, "zepi");
+  printf("buff - |%s|\n\n", buf);
   return 0;
 }
 
@@ -61,7 +64,6 @@ int s21_sprintf(char* buff, const char* format, ...) {
     } else {
       pointerToSpec = strstr(pointerToSpec, "%");
     }
-    printf("buff - |%s|\n\n", buff);
   }
   va_end(args);
 }
@@ -78,15 +80,11 @@ void formatPrint(char* buff, Specificator spec, va_list args) {
     case 'i':
     case 'd':
     case 'u':
-      if (spec.type == 'u') {
-        num = spec.length == 'h'   ? va_arg(args, unsigned short)
-              : spec.length == 'l' ? va_arg(args, unsigned long)
-                                   : va_arg(args, unsigned int);
-      } else {
-        num = spec.length == 'h'   ? va_arg(args, short)
-              : spec.length == 'l' ? va_arg(args, long)
-                                   : va_arg(args, int);
-      }
+      if (spec.type == 'u')
+        num = spec.length == 'l' ? va_arg(args, unsigned long)
+                                 : va_arg(args, unsigned int);
+      else
+        num = spec.length == 'l' ? va_arg(args, long) : va_arg(args, int);
       itoa(num, src, 10);
       break;
     case 'f':
@@ -107,12 +105,15 @@ void strcat_with_spec(char* buff, char* src, Specificator spec) {
       strcpy(temp, " ");
       strcat(temp, src);
       length++;
-    }
-    if (spec.flag_plus) {
+    } else if (spec.flag_plus) {
       strcpy(temp, "+");
       strcat(temp, src);
       length++;
+    } else {
+      strcpy(temp, src);
     }
+  } else {
+    strcpy(temp, src);
   }
   if (spec.flag_minus) strcat(buff, temp);
   while (spec.width - length > 0) {
@@ -120,7 +121,6 @@ void strcat_with_spec(char* buff, char* src, Specificator spec) {
     length++;
   }
   if (!spec.flag_minus) strcat(buff, temp);
-  strcat(buff, temp);
   free(temp);
 }
 
@@ -163,16 +163,6 @@ void trimDouble(double inputDouble, int ndigit, char* buf) {
   double leftPartDouble;
   double rightPart = modf(inputDouble, &leftPartDouble);
 
-  if (ndigit == -1) {
-    ndigit = 1;
-    double tmp = rightPart;
-    double fck;
-    while (!(tmp == 0 || tmp >= 0.999999999 || ndigit == 8)) {
-      tmp = modf(10 * tmp, &fck);
-      ndigit++;
-    }
-  }
-
   gcvt(rightPart, ndigit, rightPartStr);  // rewrite
 
   itoa((long long)leftPartDouble, leftPartStr, 10);
@@ -190,58 +180,8 @@ void trimDouble(double inputDouble, int ndigit, char* buf) {
   strcpy(buf, leftPartStr);
 }
 
-unsigned long long hexToBaseTen(char* hexVal) {
-  unsigned long long returnValue = 0;
-  int hexLen = strlen(hexVal);
-  bool numbersStarted = false;
-  bool isNegative = false;
-  for (int i = 0; i < hexLen; i++) {
-    if (hexVal[i] >= 'a' && hexVal[i] <= 'f') {
-      returnValue = returnValue + (hexVal[i] - 87) * pow(16, hexLen - i - 1);
-      numbersStarted = true;
-    } else if (hexVal[i] >= 'A' && hexVal[i] <= 'F') {
-      returnValue = returnValue + (hexVal[i] - 55) * pow(16, hexLen - i - 1);
-      numbersStarted = true;
-    } else if (hexVal[i] >= '0' && hexVal[i] <= '9') {
-      returnValue = returnValue + (hexVal[i] - 48) * pow(16, hexLen - i - 1);
-      numbersStarted = true;
-    } else if (hexVal[i] == '-') {
-      if (numbersStarted == false) isNegative = true;
-      // error can be added here for else
-    } else if (hexVal[i] == ' ') {  // любые делиметры можно добавить сюда
-      // do nothing
-    } else {
-      // error can be added here
-    }
-  }
-  if (isNegative) returnValue = returnValue * -1;
-  return returnValue;
-}
-
-unsigned long long octToBaseTen(char* octVal) {
-  unsigned long long returnValue = 0;
-  int octLen = strlen(octVal);
-  bool numbersStarted = false;
-  bool isNegative = false;
-  for (int i = 0; i < octLen; i++) {
-    if (octVal[i] >= '0' && octVal[i] <= '7') {
-      returnValue = returnValue + (octVal[i] - '0') * pow(8, octLen - i - 1);
-      numbersStarted = true;
-    } else if (octVal[i] == '-') {
-      if (numbersStarted == false) isNegative = true;
-      // error can be added here for else
-    } else if (octVal[i] == ' ') {  // любые делиметры можно добавить сюда
-      // do nothing
-    } else {
-      // error can be added here
-    }
-  }
-  if (isNegative) returnValue = returnValue * -1;
-  return returnValue;
-}
-
 Specificator parseSpecificator(char** pointerToSpec, bool* formatLoaded) {
-  Specificator spec = {0, -1, 0, 0, 0, 0, 0, 0, 0, 0};
+  Specificator spec = {0, 6, 0, 0, 0, 0, 0, 0, 0, 0};
   char allspec[] = "cdieEfgGosuxXpn";
   char allnumb[] = "1234567890";
   char alllength[] = "Llh";
