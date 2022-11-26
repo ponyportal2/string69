@@ -28,8 +28,8 @@ int s21_sprintf(char* buff, const char* format, ...);
 void formatPrint(char* buff, Specificator spec, va_list args);
 Specificator parseSpecificator(char** pointerToSpec, bool* formatLoaded);
 void strcpy_help(char* str1, char* str2, int index);
-void strcat_with_max_width(char* buff, char* src, int width);
-void itoa(int num, char* src, int radix);
+void strcat_with_spec(char* buff, char* src, Specificator spec);
+void itoa(long long num, char* src, int radix);
 void reverse(char* string);
 void trimDouble(double inputDouble, int ndigit, char* buf);
 void strcpy_help(char* str1, char* str2, int index);
@@ -74,32 +74,35 @@ void formatPrint(char* buff, Specificator spec, va_list args) {
       break;
     case 'i':
     case 'd':
-      itoa(va_arg(args, int), src, 10);
+      itoa((long long)va_arg(args, int), src, 10);
       break;
     case 'u':
-      itoa(va_arg(args, unsigned int), src, 10);
+      itoa((long long)va_arg(args, unsigned int), src, 10);
       break;
     case 'f':
       trimDouble(va_arg(args, double), spec.precision, src);
       break;
   }
-  spec.type == 's'
-      ? strcat_with_max_width(buff, va_arg(args, char*), spec.width)
-      : strcat_with_max_width(buff, src, spec.width);
+  spec.type == 's' ? strcat_with_spec(buff, va_arg(args, char*), spec)
+                   : strcat_with_spec(buff, src, spec);
 }
 
-void strcat_with_max_width(char* buff, char* src, int width) {
+void strcat_with_spec(char* buff, char* src, Specificator spec) {
   int length = strlen(src);
-  while (width - length > 0) {
+  while (spec.width - length > 0) {
     strcat(buff, " ");
     length++;
   }
   strcat(buff, src);
 }
 
-void itoa(int num, char* src, int radix) {
-  int i = 0;
+void itoa(long long num, char* src, int radix) {
+  int i = 0, j = 0;
   int digit;
+  if (num < 0) {
+    src[0] = '-';
+    j++;
+  }
   while (num >= pow(radix, i)) {
     digit = (int)(num / pow(radix, i)) % radix;
     src[i++] = (char)(digit + 48);
@@ -135,7 +138,7 @@ void trimDouble(double inputDouble, int ndigit, char* buf) {
 
   gcvt(rightPart, ndigit, rightPartStr);  // rewrite
 
-  itoa((int)leftPartDouble, leftPartStr, 10);
+  itoa((long long)leftPartDouble, leftPartStr, 10);
   int lIdx = strlen(leftPartStr) + 1;
   int rIdx = 2;
 
