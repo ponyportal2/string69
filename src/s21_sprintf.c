@@ -34,6 +34,7 @@ void reverse(char* string);
 void trimDouble(double inputDouble, int ndigit, char* buf);
 void strcpy_help(char* str1, char* str2, int index);
 void strchr_help(char* str1, char s);
+bool is_digit(char type);
 
 int main() {
   char* buf = calloc(1000, sizeof(char));
@@ -89,214 +90,240 @@ void formatPrint(char* buff, Specificator spec, va_list args) {
 
 void strcat_with_spec(char* buff, char* src, Specificator spec) {
   int length = strlen(src);
-  while (spec.width - length > 0) {
-    strcat(buff, " ");
-    length++;
-  }
-  strcat(buff, src);
-}
-
-void itoa(long long num, char* src, int radix) {
-  int i = 0, j = 0;
-  int digit;
-  if (num < 0) {
-    src[0] = '-';
-    j++;
-  }
-  while (num >= pow(radix, i)) {
-    digit = (int)(num / pow(radix, i)) % radix;
-    src[i++] = (char)(digit + 48);
-  }
-  src[i] = '\0';
-  reverse(src);
-}
-
-void reverse(char* string) {
-  char temp[MAXLINE];
-  strcpy(temp, string);
-  int length = strlen(string);
-  int i;
-  for (i = 0; i < length; i++) string[i] = temp[length - i - 1];
-  string[i] = '\0';
-}
-
-void trimDouble(double inputDouble, int ndigit, char* buf) {
-  char rightPartStr[1024] = {0};
-  char leftPartStr[1024] = {0};
-  double leftPartDouble;
-  double rightPart = modf(inputDouble, &leftPartDouble);
-
-  if (ndigit == -1) {
-    ndigit = 1;
-    double temp = rightPart;
-    double fck;
-    while (!(temp == 0 || temp >= 0.999999999)) {
-      temp = modf(10 * temp, &fck);
-      ndigit++;
-    }
-  }
-
-  gcvt(rightPart, ndigit, rightPartStr);  // rewrite
-
-  itoa((long long)leftPartDouble, leftPartStr, 10);
-  int lIdx = strlen(leftPartStr) + 1;
-  int rIdx = 2;
-
-  if (rightPartStr[rIdx] != '\0') {
-    leftPartStr[strlen(leftPartStr)] = '.';
-    while (rightPartStr[rIdx] != '\0') {
-      leftPartStr[lIdx] = rightPartStr[rIdx];
-      lIdx++;
-      rIdx++;
-    }
-  }
-  strcpy(buf, leftPartStr);
-}
-
-unsigned long long hexToBaseTen(char* hexVal) {
-  unsigned long long returnValue = 0;
-  int hexLen = strlen(hexVal);
-  bool numbersStarted = false;
-  bool isNegative = false;
-  for (int i = 0; i < hexLen; i++) {
-    if (hexVal[i] >= 'a' && hexVal[i] <= 'f') {
-      returnValue = returnValue + (hexVal[i] - 87) * pow(16, hexLen - i - 1);
-      numbersStarted = true;
-    } else if (hexVal[i] >= 'A' && hexVal[i] <= 'F') {
-      returnValue = returnValue + (hexVal[i] - 55) * pow(16, hexLen - i - 1);
-      numbersStarted = true;
-    } else if (hexVal[i] >= '0' && hexVal[i] <= '9') {
-      returnValue = returnValue + (hexVal[i] - 48) * pow(16, hexLen - i - 1);
-      numbersStarted = true;
-    } else if (hexVal[i] == '-') {
-      if (numbersStarted == false) isNegative = true;
-      // error can be added here for else
-    } else if (hexVal[i] == ' ') {  // любые делиметры можно добавить сюда
-      // do nothing
-    } else {
-      // error can be added here
-    }
-  }
-  if (isNegative) returnValue = returnValue * -1;
-  return returnValue;
-}
-
-unsigned long long octToBaseTen(char* octVal) {
-  unsigned long long returnValue = 0;
-  int octLen = strlen(octVal);
-  bool numbersStarted = false;
-  bool isNegative = false;
-  for (int i = 0; i < octLen; i++) {
-    if (octVal[i] >= '0' && octVal[i] <= '7') {
-      returnValue = returnValue + (octVal[i] - '0') * pow(8, octLen - i - 1);
-      numbersStarted = true;
-    } else if (octVal[i] == '-') {
-      if (numbersStarted == false) isNegative = true;
-      // error can be added here for else
-    } else if (octVal[i] == ' ') {  // любые делиметры можно добавить сюда
-      // do nothing
-    } else {
-      // error can be added here
-    }
-  }
-  if (isNegative) returnValue = returnValue * -1;
-  return returnValue;
-}
-
-Specificator parseSpecificator(char** pointerToSpec, bool* formatLoaded) {
-  Specificator spec = {0, -1, 0, 0, 0, 0, 0, 0, 0, 0};
-  char allspec[] = "cdieEfgGosuxXpn";
-  char allnumb[] = "1234567890";
-  char alllength[] = "Llh";
-  char* width_temp = calloc(strlen(*pointerToSpec), sizeof(char));
-  int count = 0;
-  char* str = *pointerToSpec;
-  if (strcmp(str, OUR_ERROR_) != 0) {
-    size_t i = 0;
-    for (; i < strlen(str);) {
-      if (strchr("-", str[i]) != NULL) {
-        spec.flag_minus = 1;
-        i++;
-      } else if (str[i] == '+') {
-        spec.flag_plus = 1;
-        spec.flag_space = 0;
-        i++;
-      } else if (str[i] == ' ' && !spec.flag_plus) {
-        spec.flag_space = 1;
-        i++;
-      } else if (str[i] == '0' && spec.width == 0) {
-        spec.flag_zero = 1;
-        i++;
-      } else if (str[i] == '#') {
-        spec.flag_hash = 1;
-        i++;
-      } else if (strchr(allnumb, str[i])) {
-        strcpy_help(width_temp, str, i);
-        while (strchr(allnumb, width_temp[count]) && width_temp[count] != '.') {
-          count++;
-        }
-        width_temp[count] = '\0';
-        spec.width = atoi(width_temp);
-        i += strlen(width_temp);
-      } else if (str[i] == '*') {
-        spec.width = -1;
-        i++;
-      } else if (str[i] == '.') {
-        strcpy_help(width_temp, str, i + 1);
-        count = 0;
-        while (strchr(allnumb, width_temp[count])) {
-          count++;
-        }
-        if (width_temp[0] == '*') {
-          spec.precision = -1;
-          i += 2;
-        } else {
-          width_temp[count] = '\0';
-          spec.precision = atoi(width_temp);
-          i += strlen(width_temp) + 1;
-        }
-      } else if (strchr(alllength, str[i])) {
-        spec.length = str[i];
-        i++;
-      } else if (strchr(allspec, str[i])) {
-        spec.type = str[i];
-        i++;
-        break;
-      } else if (str[i] == '%' && strlen(str) > i + 1 && str[i + 1] == '%') {
-        i++;
-        break;
-      } else {
-        i++;
+  char* temp = malloc(length * 2);
+  if {is_digit(spec.type) && src[0] != '-') {
+      if (spec.flag_space && !spec.flag_plus) {
+        strcpy(temp, " ");
+        strcat(temp, src);
+        length++;
+      }
+      if (spec.flag_plus) {
+        strcpy(temp, "+");
+        strcat(temp, src);
+        length++;
       }
     }
-    if (spec.type == 0) {
-      spec.flag_noargumet = 1;
+    if (spec.flag_minus) strcat(buff, temp);
+    while (spec.width - length > 0) {
+      strcat(buff, " ");
+      length++;
     }
-
-    *pointerToSpec += i;
+    if (!spec.flag_minus) strcat(buff, temp);
+    strcat(buff, temp);
+    free(temp);
   }
 
-  return spec;
-}
+  bool is_digit(char type) {
+    bool digit = false;
+    if (type == 'd' || type == 'i' || type == 'e' || type == 'E' ||
+        type == 'f' || type == 'g' || type == 'G' || type == 'o' ||
+        type == 'x' || type == 'X' || type == 'u')
+      digit = true;
+    return digit;
+  }
 
-void strcpy_help(
-    char* str1, char* str2,
-    int index) {  // копирует str2 начиная с некоторого индекса в str1
-  size_t i = 0;
-  for (; i < strlen(str2); i++) {
-    if (index <= i) {
-      str1[i - index] = str2[i];
+  void itoa(long long num, char* src, int radix) {
+    int i = 0, j = 0;
+    int digit;
+    if (num < 0) {
+      src[0] = '-';
+      j++;
+    }
+    while (num >= pow(radix, i)) {
+      digit = (int)(num / pow(radix, i)) % radix;
+      src[i++] = (char)(digit + 48);
+    }
+    src[i] = '\0';
+    reverse(src);
+  }
+
+  void reverse(char* string) {
+    char temp[MAXLINE];
+    strcpy(temp, string);
+    int length = strlen(string);
+    int i;
+    for (i = 0; i < length; i++) string[i] = temp[length - i - 1];
+    string[i] = '\0';
+  }
+
+  void trimDouble(double inputDouble, int ndigit, char* buf) {
+    char rightPartStr[1024] = {0};
+    char leftPartStr[1024] = {0};
+    double leftPartDouble;
+    double rightPart = modf(inputDouble, &leftPartDouble);
+
+    if (ndigit == -1) {
+      ndigit = 1;
+      double tmp = rightPart;
+      double fck;
+      while (!(tmp == 0 || tmp >= 0.999999999)) {
+        tmp = modf(10 * tmp, &fck);
+        ndigit++;
+      }
+    }
+
+    gcvt(rightPart, ndigit, rightPartStr);  // rewrite
+
+    itoa((long long)leftPartDouble, leftPartStr, 10);
+    int lIdx = strlen(leftPartStr) + 1;
+    int rIdx = 2;
+
+    if (rightPartStr[rIdx] != '\0') {
+      leftPartStr[strlen(leftPartStr)] = '.';
+      while (rightPartStr[rIdx] != '\0') {
+        leftPartStr[lIdx] = rightPartStr[rIdx];
+        lIdx++;
+        rIdx++;
+      }
+    }
+    strcpy(buf, leftPartStr);
+  }
+
+  unsigned long long hexToBaseTen(char* hexVal) {
+    unsigned long long returnValue = 0;
+    int hexLen = strlen(hexVal);
+    bool numbersStarted = false;
+    bool isNegative = false;
+    for (int i = 0; i < hexLen; i++) {
+      if (hexVal[i] >= 'a' && hexVal[i] <= 'f') {
+        returnValue = returnValue + (hexVal[i] - 87) * pow(16, hexLen - i - 1);
+        numbersStarted = true;
+      } else if (hexVal[i] >= 'A' && hexVal[i] <= 'F') {
+        returnValue = returnValue + (hexVal[i] - 55) * pow(16, hexLen - i - 1);
+        numbersStarted = true;
+      } else if (hexVal[i] >= '0' && hexVal[i] <= '9') {
+        returnValue = returnValue + (hexVal[i] - 48) * pow(16, hexLen - i - 1);
+        numbersStarted = true;
+      } else if (hexVal[i] == '-') {
+        if (numbersStarted == false) isNegative = true;
+        // error can be added here for else
+      } else if (hexVal[i] == ' ') {  // любые делиметры можно добавить сюда
+        // do nothing
+      } else {
+        // error can be added here
+      }
+    }
+    if (isNegative) returnValue = returnValue * -1;
+    return returnValue;
+  }
+
+  unsigned long long octToBaseTen(char* octVal) {
+    unsigned long long returnValue = 0;
+    int octLen = strlen(octVal);
+    bool numbersStarted = false;
+    bool isNegative = false;
+    for (int i = 0; i < octLen; i++) {
+      if (octVal[i] >= '0' && octVal[i] <= '7') {
+        returnValue = returnValue + (octVal[i] - '0') * pow(8, octLen - i - 1);
+        numbersStarted = true;
+      } else if (octVal[i] == '-') {
+        if (numbersStarted == false) isNegative = true;
+        // error can be added here for else
+      } else if (octVal[i] == ' ') {  // любые делиметры можно добавить сюда
+        // do nothing
+      } else {
+        // error can be added here
+      }
+    }
+    if (isNegative) returnValue = returnValue * -1;
+    return returnValue;
+  }
+
+  Specificator parseSpecificator(char** pointerToSpec, bool* formatLoaded) {
+    Specificator spec = {0, -1, 0, 0, 0, 0, 0, 0, 0, 0};
+    char allspec[] = "cdieEfgGosuxXpn";
+    char allnumb[] = "1234567890";
+    char alllength[] = "Llh";
+    char* width_temp = calloc(strlen(*pointerToSpec), sizeof(char));
+    int count = 0;
+    char* str = *pointerToSpec;
+    if (strcmp(str, OUR_ERROR_) != 0) {
+      size_t i = 0;
+      for (; i < strlen(str);) {
+        if (strchr("-", str[i]) != NULL) {
+          spec.flag_minus = 1;
+          i++;
+        } else if (str[i] == '+') {
+          spec.flag_plus = 1;
+          spec.flag_space = 0;
+          i++;
+        } else if (str[i] == ' ' && !spec.flag_plus) {
+          spec.flag_space = 1;
+          i++;
+        } else if (str[i] == '0' && spec.width == 0) {
+          spec.flag_zero = 1;
+          i++;
+        } else if (str[i] == '#') {
+          spec.flag_hash = 1;
+          i++;
+        } else if (strchr(allnumb, str[i])) {
+          strcpy_help(width_temp, str, i);
+          while (strchr(allnumb, width_temp[count]) &&
+                 width_temp[count] != '.') {
+            count++;
+          }
+          width_temp[count] = '\0';
+          spec.width = atoi(width_temp);
+          i += strlen(width_temp);
+        } else if (str[i] == '*') {
+          spec.width = -1;
+          i++;
+        } else if (str[i] == '.') {
+          strcpy_help(width_temp, str, i + 1);
+          count = 0;
+          while (strchr(allnumb, width_temp[count])) {
+            count++;
+          }
+          if (width_temp[0] == '*') {
+            spec.precision = -1;
+            i += 2;
+          } else {
+            width_temp[count] = '\0';
+            spec.precision = atoi(width_temp);
+            i += strlen(width_temp) + 1;
+          }
+        } else if (strchr(alllength, str[i])) {
+          spec.length = str[i];
+          i++;
+        } else if (strchr(allspec, str[i])) {
+          spec.type = str[i];
+          i++;
+          break;
+        } else if (str[i] == '%' && strlen(str) > i + 1 && str[i + 1] == '%') {
+          i++;
+          break;
+        } else {
+          i++;
+        }
+      }
+      if (spec.type == 0) {
+        spec.flag_noargumet = 1;
+      }
+
+      *pointerToSpec += i;
+    }
+
+    return spec;
+  }
+
+  void strcpy_help(
+      char* str1, char* str2,
+      int index) {  // копирует str2 начиная с некоторого индекса в str1
+    size_t i = 0;
+    for (; i < strlen(str2); i++) {
+      if (index <= i) {
+        str1[i - index] = str2[i];
+      }
+    }
+    str1[i - index + 1] = '\0';
+  }
+
+  void strchr_help(char* str1, char s) {  //если находит символ s в строке str1,
+                                          //то ставить \0 на место символа s
+    size_t i = 0;
+    for (; i < strlen(str1); i++) {
+      if (str1[i] == s) {
+        str1[i] = '\0';
+      }
     }
   }
-  str1[i - index + 1] = '\0';
-}
-
-void strchr_help(char* str1, char s) {  //если находит символ s в строке str1,
-                                        //то ставить \0 на место символа s
-  size_t i = 0;
-  for (; i < strlen(str1); i++) {
-    if (str1[i] == s) {
-      str1[i] = '\0';
-    }
-  }
-}
