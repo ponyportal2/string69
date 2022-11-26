@@ -167,7 +167,7 @@ void trimDouble(double inputDouble, int ndigit, char* buf) {
     ndigit = 1;
     double tmp = rightPart;
     double fck;
-    while (!(tmp == 0 || tmp >= 0.999999999)) {
+    while (!(tmp == 0 || tmp >= 0.999999999 || ndigit == 8)) {
       tmp = modf(10 * tmp, &fck);
       ndigit++;
     }
