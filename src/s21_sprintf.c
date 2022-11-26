@@ -1,9 +1,11 @@
+#include <math.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#define MAXLINE 200
 #define OUR_ERROR_ "KufLv91ySdu64DYPiXOHGx5Jj9Q2eKcYwnrjxhQG"
 
 #define MISMADCH_ 1
@@ -22,75 +24,68 @@ typedef struct Specificator {
   bool flag_minus, flag_plus, flag_space, flag_zero, flag_noargumet, flag_hash;
 } Specificator;
 
-void formatPrint(char* buff, Specificator spec, void* currentVarArg);
-Specificator parseSpecificator(char** pointerToSpec, bool* formatLoaded);
 int s21_sprintf(char* buff, const char* format, ...);
+void formatPrint(char* buff, Specificator spec, va_list args);
+Specificator parseSpecificator(char** pointerToSpec, bool* formatLoaded);
 void strcpy_help(char* str1, char* str2, int index);
 void strcat_with_max_width(char* buff, char* src, int width);
+void itoa(int num, char* src, int radix);
+void reverse(char* string);
+void trimDouble(double inputDouble, int ndigit, char* buf);
+void strcpy_help(char* str1, char* str2, int index);
 void strchr_help(char* str1, char s);
 
 int main() {
   char* buf = calloc(1000, sizeof(char));
-  int test =
-      s21_sprintf(buf, "Takaya shtuka: % +-6.2fjfjhfhf %*d %43c %24.21s%%010d ewq%0#fcxzc",
-                  3.1415, 100, 'C', "Far");
+  int test = s21_sprintf(buf, "Takaya shtuka: %f gj", 300.005);
   return 0;
 }
 
 int s21_sprintf(char* buff, const char* format, ...) {
   va_list args;
   va_start(args, format);
-  char* pointerToFormatStr = calloc(strlen(format), sizeof(char));
-  strcpy(pointerToFormatStr, format);
-  short status = 0;
   char* pointerToSpec = NULL;
-  strcat(buff, pointerToFormatStr);
+  strcpy(buff, format);
   strchr_help(buff, '%');
-  pointerToSpec = strstr(pointerToFormatStr, "%");
-  while (pointerToSpec != NULL) {  //заменил условие в while
+  pointerToSpec = strstr(format, "%");
+  while (pointerToSpec) {
     bool formatLoaded = false;
-    bool outputLoaded = false;
-    bool varArgLoaded = false;
     // CURRENT FORMAT ELEMENT PRINT
-    // strcat(buff, pointerToFormatStr);   - вроде не нужное действие, я даю
-    // тебе строку в buff на 53-54 строке
     Specificator spec = parseSpecificator(&pointerToSpec, &formatLoaded);
-    printf(  //
-        "flag_minus - %d\nflag_plus - %d\nflag_space - %d\nflag_zero - "
-        "%d\nflag_noargument - %d\nflag_hash - %d\nwidth - "
-        "%d\nprecision - %d\nlength - %c\ntype - %c\n",
-        spec.flag_minus, spec.flag_plus, spec.flag_space, spec.flag_zero,
-        spec.flag_noargumet, spec.flag_hash, spec.width, spec.precision, spec.length,
-        spec.type);
-        strcat(buff, pointerToSpec);
-        strchr_help(buff, '%');
+    formatPrint(buff, spec, args);
+    strcat(buff, pointerToSpec);
+    strchr_help(buff, '%');
     if (strlen(pointerToSpec) == 1 && pointerToSpec[0] == '%') {
       pointerToSpec = NULL;
     } else {
       pointerToSpec = strstr(pointerToSpec, "%");
     }
     printf("buff - |%s|\n\n", buff);
-    // formatPrint(buff, spec, va_arg(args, void*));
-    //  -------------------------------
-    if (formatLoaded == false &&
-        outputLoaded == false &&  // это пока не использую
-        varArgLoaded == false) {  //
-      status = ENDET_;            //
-    } else if (formatLoaded + outputLoaded + varArgLoaded > 0 &&  //
-               formatLoaded + outputLoaded + varArgLoaded < 3) {  //
-      status = MISMADCH_;                                         //
-    }                                                             //
   }
-  free(pointerToFormatStr);
   va_end(args);
 }
 
-void formatPrint(char* buff, Specificator spec, void* currentVarArg) {
-  if (spec.type == 'f') {
-    char src[1024];
-    gcvt(*(float*)currentVarArg, spec.precision, src);
-    strcat_with_max_width(buff, src, spec.width);
+void formatPrint(char* buff, Specificator spec, va_list args) {
+  char src[MAXLINE];
+  switch (spec.type) {
+    case 'c':
+      src[0] = va_arg(args, int);
+      src[1] = '\0';
+      break;
+    case 'i':
+    case 'd':
+      itoa(va_arg(args, int), src, 10);
+      break;
+    case 'u':
+      itoa(va_arg(args, unsigned int), src, 10);
+      break;
+    case 'f':
+      trimDouble(va_arg(args, double), spec.precision, src);
+      break;
   }
+  spec.type == 's'
+      ? strcat_with_max_width(buff, va_arg(args, char*), spec.width)
+      : strcat_with_max_width(buff, src, spec.width);
 }
 
 void strcat_with_max_width(char* buff, char* src, int width) {
@@ -102,8 +97,111 @@ void strcat_with_max_width(char* buff, char* src, int width) {
   strcat(buff, src);
 }
 
+void itoa(int num, char* src, int radix) {
+  int i = 0;
+  int digit;
+  while (num >= pow(radix, i)) {
+    digit = (int)(num / pow(radix, i)) % radix;
+    src[i++] = (char)(digit + 48);
+  }
+  src[i] = '\0';
+  reverse(src);
+}
+
+void reverse(char* string) {
+  char temp[MAXLINE];
+  strcpy(temp, string);
+  int length = strlen(string);
+  int i;
+  for (i = 0; i < length; i++) string[i] = temp[length - i - 1];
+  string[i] = '\0';
+}
+
+void trimDouble(double inputDouble, int ndigit, char* buf) {
+  char rightPartStr[1024] = {0};
+  char leftPartStr[1024] = {0};
+  double leftPartDouble;
+  double rightPart = modf(inputDouble, &leftPartDouble);
+
+  if (ndigit == -1) {
+    ndigit = 1;
+    double temp = rightPart;
+    double fck;
+    while (!(temp == 0 || temp >= 0.999999999)) {
+      temp = modf(10 * temp, &fck);
+      ndigit++;
+    }
+  }
+
+  gcvt(rightPart, ndigit, rightPartStr);  // rewrite
+
+  itoa((int)leftPartDouble, leftPartStr, 10);
+  int lIdx = strlen(leftPartStr) + 1;
+  int rIdx = 2;
+
+  if (rightPartStr[rIdx] != '\0') {
+    leftPartStr[strlen(leftPartStr)] = '.';
+    while (rightPartStr[rIdx] != '\0') {
+      leftPartStr[lIdx] = rightPartStr[rIdx];
+      lIdx++;
+      rIdx++;
+    }
+  }
+  strcpy(buf, leftPartStr);
+}
+
+unsigned long long hexToBaseTen(char* hexVal) {
+  unsigned long long returnValue = 0;
+  int hexLen = strlen(hexVal);
+  bool numbersStarted = false;
+  bool isNegative = false;
+  for (int i = 0; i < hexLen; i++) {
+    if (hexVal[i] >= 'a' && hexVal[i] <= 'f') {
+      returnValue = returnValue + (hexVal[i] - 87) * pow(16, hexLen - i - 1);
+      numbersStarted = true;
+    } else if (hexVal[i] >= 'A' && hexVal[i] <= 'F') {
+      returnValue = returnValue + (hexVal[i] - 55) * pow(16, hexLen - i - 1);
+      numbersStarted = true;
+    } else if (hexVal[i] >= '0' && hexVal[i] <= '9') {
+      returnValue = returnValue + (hexVal[i] - 48) * pow(16, hexLen - i - 1);
+      numbersStarted = true;
+    } else if (hexVal[i] == '-') {
+      if (numbersStarted == false) isNegative = true;
+      // error can be added here for else
+    } else if (hexVal[i] == ' ') {  // любые делиметры можно добавить сюда
+      // do nothing
+    } else {
+      // error can be added here
+    }
+  }
+  if (isNegative) returnValue = returnValue * -1;
+  return returnValue;
+}
+
+unsigned long long octToBaseTen(char* octVal) {
+  unsigned long long returnValue = 0;
+  int octLen = strlen(octVal);
+  bool numbersStarted = false;
+  bool isNegative = false;
+  for (int i = 0; i < octLen; i++) {
+    if (octVal[i] >= '0' && octVal[i] <= '7') {
+      returnValue = returnValue + (octVal[i] - '0') * pow(8, octLen - i - 1);
+      numbersStarted = true;
+    } else if (octVal[i] == '-') {
+      if (numbersStarted == false) isNegative = true;
+      // error can be added here for else
+    } else if (octVal[i] == ' ') {  // любые делиметры можно добавить сюда
+      // do nothing
+    } else {
+      // error can be added here
+    }
+  }
+  if (isNegative) returnValue = returnValue * -1;
+  return returnValue;
+}
+
 Specificator parseSpecificator(char** pointerToSpec, bool* formatLoaded) {
-  Specificator spec = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  Specificator spec = {0, -1, 0, 0, 0, 0, 0, 0, 0, 0};
   char allspec[] = "cdieEfgGosuxXpn";
   char allnumb[] = "1234567890";
   char alllength[] = "Llh";
