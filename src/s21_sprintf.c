@@ -1,70 +1,23 @@
-#include <math.h>
-#include <stdarg.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#define MAXLINE 200
-#define OUR_ERROR_ "KufLv91ySdu64DYPiXOHGx5Jj9Q2eKcYwnrjxhQG"
-
-#define MISMADCH_ 1
-#define ENDET_ 2
-// структура: %[flags][width][.precisions][length]type;
-// flags: flag_minus - "-"; flag_plus - "+"; flag_zero - "0"; flag_space - " ";
-// flag_noargument - skip the argument; flag_hash - "#"; width: (number); (-1)
-// the same as *; .precisions: (.number);
-// (.-1) the same as *; length: h - short int, only with i, d, o, u, x and X; l
-// - long int and long char, only with i, d, o, u, x, X, c and s; L - long
-// double, only with e, E, f, g and G type: c, d, i, e, E, f, g, G, o, s, u, x,
-// X, p, n;
-typedef struct Specificator {
-  short width, precision;
-  char type, length;
-  bool flag_minus, flag_plus, flag_space, flag_zero, flag_noargumet, flag_hash;
-} Specificator;
-
-int s21_sprintf(char* buff, const char* format, ...);
-void formatPrint(char* buff, Specificator spec, va_list args);
-Specificator parseSpecificator(char** pointerToSpec, bool* formatLoaded);
-void strcpy_help(char* str1, char* str2, int index);
-void strcat_with_spec(char* buff, char* src, Specificator spec);
-void itoa(long long num, char* src, int radix);
-void reverse(char* string);
-void trimDouble(double inputDouble, int ndigit, char* buf);
-void ourGcvt(long double value, int ndigit, char* buf, int radix);
-int zeroOs(char* str);
-void strcpy_help(char* str1, char* str2, int index);
-void strchr_help(char* str1, char s);
-bool is_digit(char type);
-
-int main() {
-  char* buf = calloc(1000, sizeof(char));
-  int test = s21_sprintf(buf, "Takaya shtuka: %+i gj %20f %s\n", 300,
-                         9999999.08, "zepi");
-  printf("Takaya shtuka: %+i gj %20f %s\n", 300, 9999999.08, "zepi");
-  printf("buff - |%s|\n\n", buf);
-  return 0;
-}
+#include "s21_sprintf.h"
 
 int s21_sprintf(char* buff, const char* format, ...) {
   va_list args;
   va_start(args, format);
   char* pointerToSpec = NULL;
-  strcpy(buff, format);
+  s21_strcpy(buff, format);
   strchr_help(buff, '%');
-  pointerToSpec = strstr(format, "%");
+  pointerToSpec = s21_strstr((char*)format, "%");
   while (pointerToSpec) {
     bool formatLoaded = false;
     // CURRENT FORMAT ELEMENT PRINT
     Specificator spec = parseSpecificator(&pointerToSpec, &formatLoaded);
     formatPrint(buff, spec, args);
-    strcat(buff, pointerToSpec);
+    s21_strcat(buff, pointerToSpec);
     strchr_help(buff, '%');
-    if (strlen(pointerToSpec) == 1 && pointerToSpec[0] == '%') {
+    if (s21_strlen(pointerToSpec) == 1 && pointerToSpec[0] == '%') {
       pointerToSpec = NULL;
     } else {
-      pointerToSpec = strstr(pointerToSpec, "%");
+      pointerToSpec = s21_strstr(pointerToSpec, "%");
     }
   }
   va_end(args);
@@ -100,29 +53,29 @@ void formatPrint(char* buff, Specificator spec, va_list args) {
 }
 
 void strcat_with_spec(char* buff, char* src, Specificator spec) {
-  int length = strlen(src);
+  int length = s21_strlen(src);
   char* temp = malloc(length * 2);
   if (is_digit(spec.type) && src[0] != '-') {
     if (spec.flag_space && !spec.flag_plus) {
-      strcpy(temp, " ");
-      strcat(temp, src);
+      s21_strcpy(temp, " ");
+      s21_strcat(temp, src);
       length++;
     } else if (spec.flag_plus) {
-      strcpy(temp, "+");
-      strcat(temp, src);
+      s21_strcpy(temp, "+");
+      s21_strcat(temp, src);
       length++;
     } else {
-      strcpy(temp, src);
+      s21_strcpy(temp, src);
     }
   } else {
-    strcpy(temp, src);
+    s21_strcpy(temp, src);
   }
-  if (spec.flag_minus) strcat(buff, temp);
+  if (spec.flag_minus) s21_strcat(buff, temp);
   while (spec.width - length > 0) {
-    strcat(buff, " ");
+    s21_strcat(buff, " ");
     length++;
   }
-  if (!spec.flag_minus) strcat(buff, temp);
+  if (!spec.flag_minus) s21_strcat(buff, temp);
   free(temp);
 }
 
@@ -144,7 +97,8 @@ void itoa(long long num, char* src, int radix) {
   }
   while (num >= pow(radix, i)) {
     digit = (int)(num / pow(radix, i)) % radix;
-    src[i++] = (char)(digit + 48);
+    src[i++] =
+        (digit >= 0 && digit <= 9) ? (char)(digit + 48) : (char)(digit + 65);
   }
   src[i] = '\0';
   reverse(src);
@@ -152,8 +106,8 @@ void itoa(long long num, char* src, int radix) {
 
 void reverse(char* string) {
   char temp[MAXLINE];
-  strcpy(temp, string);
-  int length = strlen(string);
+  s21_strcpy(temp, string);
+  int length = s21_strlen(string);
   int i;
   for (i = 0; i < length; i++) string[i] = temp[length - i - 1];
   string[i] = '\0';
@@ -168,18 +122,18 @@ void trimDouble(double inputDouble, int ndigit, char* buf) {
   ourGcvt((long double)rightPart, ndigit, rightPartStr, 10);  // rewrite
 
   itoa((long long)leftPartDouble, leftPartStr, 10);
-  int lIdx = strlen(leftPartStr) + 1;
+  int lIdx = s21_strlen(leftPartStr) + 1;
   int rIdx = 2;
 
   if (rightPartStr[rIdx] != '\0') {
-    leftPartStr[strlen(leftPartStr)] = '.';
+    leftPartStr[s21_strlen(leftPartStr)] = '.';
     while (rightPartStr[rIdx] != '\0') {
       leftPartStr[lIdx] = rightPartStr[rIdx];
       lIdx++;
       rIdx++;
     }
   }
-  strcpy(buf, leftPartStr);
+  s21_strcpy(buf, leftPartStr);
 }
 
 void ourGcvt(long double value, int ndigit, char* buf, int radix) {
@@ -216,12 +170,12 @@ void ourGcvt(long double value, int ndigit, char* buf, int radix) {
     rightPartDouble = rightPartDouble * 10;
     rightPartIntTemp = rightPartDouble;
     itoa(rightPartIntTemp, leftPartChunk, 10);
-    if (strcmp(leftPartChunk, "") == 0) {
-      strcat(finalRightPart, "0");
+    if (s21_strcmp(leftPartChunk, "") == 0) {
+      s21_strcat(finalRightPart, "0");
       // whileBreak = true;
       // printf("[%i]", i);
     } else {
-      strcat(finalRightPart, leftPartChunk);
+      s21_strcat(finalRightPart, leftPartChunk);
     }
     i++;
   }
@@ -231,13 +185,13 @@ void ourGcvt(long double value, int ndigit, char* buf, int radix) {
     if (zeroOs(leftPartStr) && zeroOs(finalRightPart)) {
       // do nothing
     } else {
-      strcat(finalStr, "-");
+      s21_strcat(finalStr, "-");
     }
   }
-  strcat(finalStr, leftPartStr);
-  if (ndigit != 0) strcat(finalStr, ".");
-  strcat(finalStr, finalRightPart);
-  strcpy(buf, finalStr);
+  s21_strcat(finalStr, leftPartStr);
+  if (ndigit != 0) s21_strcat(finalStr, ".");
+  s21_strcat(finalStr, finalRightPart);
+  s21_strcpy(buf, finalStr);
   free(leftPartStr);
   free(finalStr);
 }
@@ -260,13 +214,13 @@ Specificator parseSpecificator(char** pointerToSpec, bool* formatLoaded) {
   char allspec[] = "cdieEfgGosuxXpn";
   char allnumb[] = "1234567890";
   char alllength[] = "Llh";
-  char* width_temp = calloc(strlen(*pointerToSpec), sizeof(char));
+  char* width_temp = calloc(s21_strlen(*pointerToSpec), sizeof(char));
   int count = 0;
   char* str = *pointerToSpec;
-  if (strcmp(str, OUR_ERROR_) != 0) {
+  if (s21_strcmp(str, OUR_ERROR_) != 0) {
     size_t i = 0;
-    for (; i < strlen(str);) {
-      if (strchr("-", str[i]) != NULL) {
+    for (; i < s21_strlen(str);) {
+      if (s21_strchr("-", str[i]) != NULL) {
         spec.flag_minus = 1;
         i++;
       } else if (str[i] == '+') {
@@ -282,21 +236,22 @@ Specificator parseSpecificator(char** pointerToSpec, bool* formatLoaded) {
       } else if (str[i] == '#') {
         spec.flag_hash = 1;
         i++;
-      } else if (strchr(allnumb, str[i])) {
+      } else if (s21_strchr(allnumb, str[i])) {
         strcpy_help(width_temp, str, i);
-        while (strchr(allnumb, width_temp[count]) && width_temp[count] != '.') {
+        while (s21_strchr(allnumb, width_temp[count]) &&
+               width_temp[count] != '.') {
           count++;
         }
         width_temp[count] = '\0';
         spec.width = atoi(width_temp);
-        i += strlen(width_temp);
+        i += s21_strlen(width_temp);
       } else if (str[i] == '*') {
         spec.width = -1;
         i++;
       } else if (str[i] == '.') {
         strcpy_help(width_temp, str, i + 1);
         count = 0;
-        while (strchr(allnumb, width_temp[count])) {
+        while (s21_strchr(allnumb, width_temp[count])) {
           count++;
         }
         if (width_temp[0] == '*') {
@@ -305,16 +260,17 @@ Specificator parseSpecificator(char** pointerToSpec, bool* formatLoaded) {
         } else {
           width_temp[count] = '\0';
           spec.precision = atoi(width_temp);
-          i += strlen(width_temp) + 1;
+          i += s21_strlen(width_temp) + 1;
         }
-      } else if (strchr(alllength, str[i])) {
+      } else if (s21_strchr(alllength, str[i])) {
         spec.length = str[i];
         i++;
-      } else if (strchr(allspec, str[i])) {
+      } else if (s21_strchr(allspec, str[i])) {
         spec.type = str[i];
         i++;
         break;
-      } else if (str[i] == '%' && strlen(str) > i + 1 && str[i + 1] == '%') {
+      } else if (str[i] == '%' && s21_strlen(str) > i + 1 &&
+                 str[i + 1] == '%') {
         i++;
         break;
       } else {
@@ -335,7 +291,7 @@ void strcpy_help(
     char* str1, char* str2,
     int index) {  // копирует str2 начиная с некоторого индекса в str1
   size_t i = 0;
-  for (; i < strlen(str2); i++) {
+  for (; i < s21_strlen(str2); i++) {
     if (index <= i) {
       str1[i - index] = str2[i];
     }
@@ -346,7 +302,7 @@ void strcpy_help(
 void strchr_help(char* str1, char s) {  //если находит символ s в строке str1,
                                         //то ставить \0 на место символа s
   size_t i = 0;
-  for (; i < strlen(str1); i++) {
+  for (; i < s21_strlen(str1); i++) {
     if (str1[i] == s) {
       str1[i] = '\0';
     }
