@@ -32,15 +32,17 @@ void strcat_with_spec(char* buff, char* src, Specificator spec);
 void itoa(long long num, char* src, int radix);
 void reverse(char* string);
 void trimDouble(double inputDouble, int ndigit, char* buf);
+void ourGcvt(long double value, int ndigit, char* buf, int radix);
+int zeroOs(char* str);
 void strcpy_help(char* str1, char* str2, int index);
 void strchr_help(char* str1, char s);
 bool is_digit(char type);
 
 int main() {
   char* buf = calloc(1000, sizeof(char));
-  int test = s21_sprintf(buf, "Takaya shtuka: %+i gj %9.2f %s\n", 300,
+  int test = s21_sprintf(buf, "Takaya shtuka: %+i gj %20f %s\n", 300,
                          9999999.08, "zepi");
-  printf("Takaya shtuka: %+i gj %9.2f %s\n", 300, 9999999.08, "zepi");
+  printf("Takaya shtuka: %+i gj %20f %s\n", 300, 9999999.08, "zepi");
   printf("buff - |%s|\n\n", buf);
   return 0;
 }
@@ -163,7 +165,7 @@ void trimDouble(double inputDouble, int ndigit, char* buf) {
   double leftPartDouble;
   double rightPart = modf(inputDouble, &leftPartDouble);
 
-  gcvt(rightPart, ndigit, rightPartStr);  // rewrite
+  ourGcvt((long double)rightPart, ndigit, rightPartStr, 10);  // rewrite
 
   itoa((long long)leftPartDouble, leftPartStr, 10);
   int lIdx = strlen(leftPartStr) + 1;
@@ -178,6 +180,79 @@ void trimDouble(double inputDouble, int ndigit, char* buf) {
     }
   }
   strcpy(buf, leftPartStr);
+}
+
+void ourGcvt(long double value, int ndigit, char* buf, int radix) {
+  long double localValue = value;
+  bool isNegative = false;
+  if (value < 0) {
+    isNegative = true;
+    localValue = localValue * -1;
+  }
+  long long leftPartInt = localValue;
+  char* leftPartStr = calloc(1024, sizeof(char));
+  long double leftPartDouble = leftPartInt;
+  long double rightPartDouble = localValue - leftPartDouble;
+  bool firstOneAdded = false;
+  char* finalStr = calloc(1024, sizeof(char));
+  if (leftPartInt != 0) {
+    itoa(leftPartInt, leftPartStr, radix);
+  } else {
+    leftPartStr[0] = '0';
+  }
+  if ((rightPartDouble - 0.1) < 0) {
+    rightPartDouble += 0.1;
+    firstOneAdded = true;
+  } else {
+    // do nothing
+  }
+  char leftPartChunk[1024] = {0};
+  char finalRightPart[1024] = {0};
+  bool whileBreak = false;
+  int rightPartIntTemp = 0;
+  int i = 0;
+  while (i < 15 && whileBreak == false) {
+    rightPartDouble = rightPartDouble - (long double)rightPartIntTemp;
+    rightPartDouble = rightPartDouble * 10;
+    rightPartIntTemp = rightPartDouble;
+    itoa(rightPartIntTemp, leftPartChunk, 10);
+    if (strcmp(leftPartChunk, "") == 0) {
+      strcat(finalRightPart, "0");
+      // whileBreak = true;
+      // printf("[%i]", i);
+    } else {
+      strcat(finalRightPart, leftPartChunk);
+    }
+    i++;
+  }
+  if (firstOneAdded) finalRightPart[0] = '0';
+  finalRightPart[ndigit] = '\0';
+  if (isNegative) {
+    if (zeroOs(leftPartStr) && zeroOs(finalRightPart)) {
+      // do nothing
+    } else {
+      strcat(finalStr, "-");
+    }
+  }
+  strcat(finalStr, leftPartStr);
+  if (ndigit != 0) strcat(finalStr, ".");
+  strcat(finalStr, finalRightPart);
+  strcpy(buf, finalStr);
+  free(leftPartStr);
+  free(finalStr);
+}
+
+int zeroOs(char* str) {
+  int result = 1;
+  int i = 0;
+  while (str[i] != '\0') {
+    if (str[i] != '0') {
+      result = 0;
+      break;
+    }
+    i++;
+  }
+  return result;
 }
 
 Specificator parseSpecificator(char** pointerToSpec, bool* formatLoaded) {
