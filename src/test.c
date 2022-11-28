@@ -1,4 +1,57 @@
 #include "test.h"
+
+//sprintf
+START_TEST(sprintf_test) {
+  char str1[SIZE] = "";
+  char str2[SIZE] = "";
+  sprintf(str1, "Value of Pi = %f", M_PI);
+  s21_sprintf(str2, "Value of Pi = %f", M_PI);
+  ck_assert_pstr_eq(str1, str2);
+}
+END_TEST
+
+START_TEST(sprintf_extra_test) {
+  char str1[SIZE] = "";
+  char str2[SIZE] = "";
+  s21_sprintf(str1, "Takaya shtuka: -#o %0.f %+i gj %20f %s%c\n",4.44, 300, 9999999.08, "zepi", 6);
+  sprintf(str2, "Takaya shtuka: -#o %0.f %+i gj %20f %s%c\n",4.44, 300, 9999999.08, "zepi", 6);
+  ck_assert_pstr_eq(str1, str2);
+}
+END_TEST
+
+//sscanf
+START_TEST(sscanf_test) {
+  char str1[SIZE] = "";
+  char str2[SIZE] = "";
+  int i = 0, j = 0;
+  sscanf("hello 1 2 3 4 5", "%s%d", str1, &i);
+  s21_sscanf("hello 1 2 3 4 5", "%s%d", str2, &j);
+  ck_assert_pstr_eq(str1, str2);
+}
+END_TEST
+
+START_TEST(sscanf_extra_test) {
+  char str1[SIZE] = "";
+  char str2[SIZE] = "";
+  int i = 0, j = 0;
+  float n, m;
+  sscanf("shrek 1 2 3 4 0.05", "%hhn%X%f", str1, &i, &n);
+  s21_sscanf("shrek 1 2 3 4 0.05", "%hhn%X%f", str2, &j, &m);
+  ck_assert_int_eq(n, m);
+  ck_assert_pstr_eq(str1, str2);
+}
+END_TEST
+
+START_TEST(sscanf_bonus_test) {
+  char str1[SIZE] = "";
+  char str2[SIZE] = "";
+  int i = 0, j = 0;
+  sscanf("sdsd 4", "%s%o", str1, &i);
+  s21_sscanf("sdsd 4", "%s%o", str2, &j);
+  ck_assert_int_eq(i, j);
+}
+END_TEST
+
 //memchr
 START_TEST(memchr_test) {
   char str1[SIZE] = "";
@@ -300,6 +353,7 @@ START_TEST(insert_test) {
 }
 END_TEST
 
+/*
 void reverser(char* src, char* pat, char *res) {
     size_t n = strspn(src, pat);
     size_t j = 0;
@@ -318,7 +372,6 @@ void reverser(char* src, char* pat, char *res) {
     }
     res[size] = '\0';
 }
-
 //trim
 START_TEST(trim_test) {
   char str1[SIZE] = "";
@@ -332,15 +385,15 @@ START_TEST(trim_test) {
       char res1[SIZE] = ""; 
       reverser(res, str2, res1);
       s = s21_trim(str1, str2);
-    ck_assert_pstr_eq(res1, s);
+    ck_assert_pstr_eq(res1, "s");
   } else {
       s = s21_trim(str1, str2);
-      ck_assert_pstr_eq(NULL, s);
+      ck_assert_pstr_eq(NULL, "s");
   }
   if (s) free(s);
 }
 END_TEST
-
+*/
 TCase *create_tc(size_t index, size_t size) {
   TCase *tc = tcase_create(tcases[index].name);
   tcase_set_timeout(tc, 10);
@@ -441,7 +494,9 @@ void add_cases(TCase** tc, size_t index, size_t size) {
     case 20: tcase_add_loop_test(*tc, to_upper_test, 0, size); break;
     case 21: tcase_add_loop_test(*tc, to_lower_test, 0, size); break;
     case 22: tcase_add_loop_test(*tc, insert_test, 0, size); break;
-    case 23: tcase_add_loop_test(*tc, trim_test, 0, size); break;
+    case 23: break;//tcase_add_loop_test(*tc, trim_test, 0, size); break;
+    case 24: tcase_add_test(*tc, sscanf_test); tcase_add_test(*tc, sscanf_extra_test); tcase_add_test(*tc, sscanf_bonus_test); break;
+    case 25: tcase_add_test(*tc, sprintf_test); tcase_add_test(*tc, sprintf_extra_test); break;
     default: break;
   }
 }
@@ -545,12 +600,9 @@ int main(void) {
   srunner_set_fork_status(suite_runner, CK_NOFORK);
   srunner_set_xml(suite_runner, "log.xml");
   srunner_run_all(suite_runner, CK_NORMAL);
-  //int failed_count = 
   srunner_ntests_failed(suite_runner);
-  //if (failed_count != 0) {
-    double N = TC_STRUCT_SIZE * (double)size;
-    print_log(N);
- // }
+  double N = (TC_STRUCT_SIZE * (double)size) + EXTRA_TESTS_COUNT;
+  print_log(N);
   srunner_free(suite_runner);
   destroy(tmp);
   return EXIT_SUCCESS;

@@ -1,7 +1,7 @@
 UNAME:=$(shell uname -s)
 ifeq ($(UNAME),Linux)
 	LFLAGS=-lcheck -lsubunit -lrt -lm -lpthread
-	LEAK=valgrind --leak-check=full --show-leak-kinds=all --log-file="leak.log"
+	LEAK=valgrind --leak-check=full --track-origins=yes --show-leak-kinds=all --log-file="leak.log"
 	SYSFLAG=-D LINUX
 endif
 ifeq ($(UNAME),Darwin)
@@ -11,6 +11,7 @@ ifeq ($(UNAME),Darwin)
 endif
 CFLAGS=-Wall -Werror -Wextra
 GFLAGS=-fprofile-arcs -ftest-coverage
+SOURCES=sscanf_parser/s21_sscanf.c test.c s21_sprintf.c
 
 all: s21_string.a
 
@@ -41,7 +42,7 @@ cppcheck:
 	cppcheck --enable=all *.c
 
 gcov_report:
-	gcc $(GFLAGS) $(SYSFLAG) test.c s21_string.c $(LFLAGS) -o test
+	gcc $(GFLAGS) $(SYSFLAG) $(SOURCES) s21_string.c $(LFLAGS) -o test
 	-./test > test.log
 	bash test_log.sh
 	lcov -t "test" -o test.info -c -d .
@@ -49,12 +50,12 @@ gcov_report:
 	open report/index.html
 	
 test: s21_string.a
-	gcc $(CFLAGS) $(SYSFLAG) test.c -L. -ls21_string $(LFLAGS) -o test
+	gcc $(SYSFLAG) $(SOURCES) -L. -ls21_string $(LFLAGS) -o test
 	-./test > test.log
 	bash test_log.sh
 
 leaks: s21_string.a
-	gcc $(SYSFLAG) test.c -L. -ls21_string $(LFLAGS) -o test
+	gcc $(SYSFLAG) $(SOURCES) -L. -ls21_string $(LFLAGS) -o test
 	$(LEAK) ./test > test.log
 	bash test_log.sh
 	bash test_leak.sh

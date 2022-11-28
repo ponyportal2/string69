@@ -8,6 +8,8 @@
 #include <regex.h>
 #include <ctype.h>
 #include "s21_string.h"
+#include "sscanf_parser/s21_sscanf.h"
+#include "s21_sprintf.h"
 
 #define SIZE 4096
 #define MAX_ERRLOG_SIZE 3
@@ -18,6 +20,7 @@
 #define MIN_N 6
 #define FILENAME "txt.txt"
 #define START_STRUCT_SIZE 8
+#define EXTRA_TESTS_COUNT 5
 
 struct tcase_ {
   const char* name;
@@ -36,7 +39,8 @@ struct tcase_ tcases[] = {
   {"strstr_tc"}, {"strtok_tc"},
   {"strspn_tc"}, {"to_upper"},
   {"to_lower"}, {"insert"},
-  {"trim"}
+  {"trim"}, {"sscanf"},
+  {"sprintf"}
 };
 
 
