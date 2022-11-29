@@ -43,6 +43,11 @@ struct tcase_ tcases[] = {
   {"sprintf"}
 };
 
+struct tcase_ special_test[] = {
+  {"sscanf_bonus_test"}, {"sscanf_extra_test"},
+  {"sscanf_test"}, {"sprintf_extra_test"},
+  {"sprintf_test"}
+};
 
 struct test_struct {
     char* str1;
@@ -67,6 +72,7 @@ struct test_struct test[SIZE] = {
   {"b\0\n \0\t habooba\n", "2\n 3\t\0 habooba\n", '0', 8}
 };
 
+int is_special(char name[SIZE]);
 void reverser(char* src, char* pat, char *res);
 void printAllCases(size_t size);
 size_t set_test(char* filename, list** tmp);

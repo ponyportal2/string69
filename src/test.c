@@ -7,6 +7,9 @@ START_TEST(sprintf_test) {
   sprintf(str1, "Value of Pi = %f", M_PI);
   s21_sprintf(str2, "Value of Pi = %f", M_PI);
   ck_assert_pstr_eq(str1, str2);
+  sprintf(str1, "Value of Pi = %f", 0.2);
+  s21_sprintf(str2, "Value of Pi = %f", 0.2);
+  ck_assert_pstr_eq(str1, str2);
 }
 END_TEST
 
@@ -23,32 +26,80 @@ END_TEST
 START_TEST(sscanf_test) {
   char str1[SIZE] = "";
   char str2[SIZE] = "";
-  int i = 0, j = 0;
-  sscanf("hello 1 2 3 4 5", "%s%d", str1, &i);
-  s21_sscanf("hello 1 2 3 4 5", "%s%d", str2, &j);
+  int i = 0, j = 0, ni = 0, nj = 0;
+  long int li = 0, lj = 0, lx = 0, ly = 0;
+  short int si = 0, sj = 0, sx = 0, sy = 0, ho1 = 0, ho2 = 0;
+  
+  sscanf("123", "%ho", &ho1);
+  s21_sscanf("123", "%ho",&ho2);
+  ck_assert_int_eq(ho1, ho2);
+
+  sscanf("hello 001 2 3 4 5 10000000000", "%s %hd %2d %d %ld %lx %hx", str1, &si, &ni, &i, &li, &lx, &sx);
+  s21_sscanf("hello 001 2 3 4 5 10000000000", "%s %hd %2d %d %ld %lx %hx", str2, &sj, &nj, &j, &lj, &ly, &sy);
   ck_assert_pstr_eq(str1, str2);
+  ck_assert_int_eq(si, sj);
+  ck_assert_int_eq(ni, nj);
+  ck_assert_int_eq(li, lj);
+  ck_assert_int_eq(lx, ly);
+  ck_assert_int_eq(sx, sy);
 }
 END_TEST
 
 START_TEST(sscanf_extra_test) {
   char str1[SIZE] = "";
   char str2[SIZE] = "";
-  int i = 0, j = 0;
-  float n, m;
-  sscanf("shrek 1 2 3 4 0.05", "%hhn%X%f", str1, &i, &n);
-  s21_sscanf("shrek 1 2 3 4 0.05", "%hhn%X%f", str2, &j, &m);
-  ck_assert_int_eq(n, m);
+  int i = 0, j = 0, ni = 0, nj = 0;
+  double n = 0, m = 0;
+  float e1 = 0, e2 = 0, inf1 = 0, inf2 = 0, e_w = 0, e1_w = 0, f_1 = 0, f_2 = 0;
+  char ch = 0, c = 0;
+  long double li = 0, lj = 0, li_ = 0, lj_ = 0, l_i = 0, l_j = 0;
+
+  sscanf("NAN INF", "%f %f", &f_1, &e1);
+  s21_sscanf("NAN INF", "%f %f",&f_2, &e2);
+  ck_assert_float_eq(f_1, f_2);
+  ck_assert_float_eq(e1, e2);
+
+  sscanf("0x1faf", "%i", &i);
+  s21_sscanf("0x1faf", "%i",&j);
+
+  sscanf("shrek 0x1 1 0.05 h 1.0000000001 NAN INF NAN INF 0.003", "%s* %X %2X %lf %c %Lf %Lf %Lf %2e %2f %2e+1", 
+  str1, &i, &ni, &n, &ch, &li, &li_, &l_i, &e1, &inf1, &e_w);
+  s21_sscanf("shrek 0x1 1 0.05 h 1.0000000001 NAN INF NAN INF 0.003", "%s* %X %2X %lf %c %Lf %Lf %Lf %2e %2f %2e+1", 
+  str2, &j, &nj, &m, &c, &lj, &lj_, &l_j, &e2, &inf2, &e1_w);
+  ck_assert_double_eq(n, m);
   ck_assert_pstr_eq(str1, str2);
+  ck_assert_int_eq(i, j);
+  ck_assert_int_eq(ni, nj);
+  ck_assert_int_eq(ch, c);
+  ck_assert_int_eq(li, lj);
+  ck_assert_int_eq(li_, lj_);
+  ck_assert_int_eq(l_i, l_j);
+  ck_assert_float_eq(e1, e2);
+  ck_assert_float_eq(inf1, inf2);
+  ck_assert_float_eq(e_w, e1_w);
 }
 END_TEST
 
 START_TEST(sscanf_bonus_test) {
   char str1[SIZE] = "";
   char str2[SIZE] = "";
-  int i = 0, j = 0;
-  sscanf("sdsd 4", "%s%o", str1, &i);
-  s21_sscanf("sdsd 4", "%s%o", str2, &j);
-  ck_assert_int_eq(i, j);
+  int k = 0, l = 0;
+  long unsigned int i = 0, j = 0;
+  short n = 0, n_ = 0;
+  float h = 0, m = 0;
+  char* p, *p1;
+
+  sscanf(" \t sdsd", "%p", &p);
+  s21_sscanf(" \t sdsd", "%p",&p1);
+ // ck_assert_pstr_eq(p, p1);
+
+  sscanf(" \t sdsd % 4 010 0.891", "*[ \t]%s %% %lo %i %hn %2f", str1, &i, &k, &n, &h);
+  s21_sscanf(" \t sdsd % 4 010 0.891", "*[ \t]%s %% %lo %i %hn %2f",str2, &j, &l, &n_, &m);
+  ck_assert_pstr_eq(str1, str2);
+  ck_assert_uint_eq(i, j);
+  ck_assert_int_eq(k, l);
+  ck_assert_int_eq(n, n_);
+  ck_assert_float_eq(h, m);
 }
 END_TEST
 
@@ -353,7 +404,6 @@ START_TEST(insert_test) {
 }
 END_TEST
 
-/*
 void reverser(char* src, char* pat, char *res) {
     size_t n = strspn(src, pat);
     size_t j = 0;
@@ -393,7 +443,7 @@ START_TEST(trim_test) {
   if (s) free(s);
 }
 END_TEST
-*/
+
 TCase *create_tc(size_t index, size_t size) {
   TCase *tc = tcase_create(tcases[index].name);
   tcase_set_timeout(tc, 10);
@@ -426,7 +476,7 @@ void print_log(double n_checks) {
           if (counter > MAX_ERRLOG_SIZE) printf("----------SEE OTHER %d ERRORS IN LOG-------------\n", counter - MAX_ERRLOG_SIZE);
           counter = 0;
           }
-        print_error(name, iteration, counter);
+          if (!is_special(name)) print_error(name, iteration, counter);
         memset(prev_name, 0, sizeof(prev_name));
         strcpy(prev_name, name);
         counter++;
@@ -442,6 +492,19 @@ void print_log(double n_checks) {
     if (line) free(line);
       fclose(f);
     }
+}
+
+int is_special(char name[SIZE]) {
+    size_t size = sizeof(special_test)/ sizeof(special_test[0]);
+    int isSpecial = 0;
+            for (size_t i = 0; i < size; i++) {
+              if (strcmp(special_test[i].name, name) == 0) {
+                printf("-------------------------------------------------\n");
+                printf("FAILED %s\n", name);
+                isSpecial = 1;
+              }
+            }
+            return isSpecial;
 }
 
 void print_error(char name_test[SIZE], int index, int counter) {
@@ -494,7 +557,7 @@ void add_cases(TCase** tc, size_t index, size_t size) {
     case 20: tcase_add_loop_test(*tc, to_upper_test, 0, size); break;
     case 21: tcase_add_loop_test(*tc, to_lower_test, 0, size); break;
     case 22: tcase_add_loop_test(*tc, insert_test, 0, size); break;
-    case 23: break;//tcase_add_loop_test(*tc, trim_test, 0, size); break;
+    case 23: tcase_add_loop_test(*tc, trim_test, 0, size); break;
     case 24: tcase_add_test(*tc, sscanf_test); tcase_add_test(*tc, sscanf_extra_test); tcase_add_test(*tc, sscanf_bonus_test); break;
     case 25: tcase_add_test(*tc, sprintf_test); tcase_add_test(*tc, sprintf_extra_test); break;
     default: break;
