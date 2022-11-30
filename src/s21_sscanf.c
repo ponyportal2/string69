@@ -65,10 +65,8 @@ int s21_sscanf(const char *input, const char *format, ...) {
         
     if (!stopMove && Specif.Specif != '%') {
       if (Specif.argWidth != 1) {
-        
     varArgParsingAndAssignment(currentInputElem,
-                               &varArgLoaded, va_arg(args, void *), Specif, &n_counter, &counterForReturn);
-                               
+                               &varArgLoaded, va_arg(args, void *), Specif, &n_counter, &counterForReturn);      
       } else {
         checkArgWidth = true;
         counterForReturn--;
@@ -123,6 +121,7 @@ if (*currentFormatString == '%' && !checkFirst) {
 
 if (!startParse && *currentFormatString != '%'){
 startParse = true;
+returnStr = currentFormatString;
 } else {
   startParse = true;
  while (*currentFormatString != '\0' && *currentFormatString != '%') {
@@ -134,7 +133,6 @@ startParse = true;
     returnStr = currentFormatString;
   } else {
     currentFormatString = NULL;
-
   }
 }
   if (returnStr != NULL) {
@@ -189,8 +187,17 @@ char formatParsing(char formatStatic[16384], char currentFormatElem[8192],
         i++;
         currentFormatElem++;
     }
-    } else {
-       *status = MISMADCH_;
+    } else if (*currentFormatElem != '\0') {
+       *status = 0;
+       int i = 0;
+       
+       (*Specif).Specif = '%';
+       (*Specif).Space = ' ';
+        while (*currentFormatElem != '%') {
+        (*Specif).buff[i] = *currentFormatElem;
+        i++;
+        currentFormatElem++;
+    }
     }
   }
   currentFormatElem++;
@@ -686,7 +693,7 @@ void fillOneByOne(char input[16384], char currentInputElem[8192], int wid, struc
   if (Specif.Specif == 's') {
     *startParsing = false; 
   }
-  if (Specif.Specif != '%') {
+  if (Specif.Specif != '%' && Specif.Specif != '\n') {
   while (input[i] != '\0' && (j < wid || checkWid)) {
     if ((i == 0 && (!(*startParsing)))) {
       while (s21_match("\t \n", input[i]) && Specif.Specif == 's') {
@@ -734,8 +741,8 @@ void chopLeft(char input[16384], int howMany, size_t *n_counter, struct Specific
 int k = 0;
 int i = 0;
 j = 0;
-  while ((Specif.buff[k] != '\0' && input[i] != '\0') || Specif.Specif == '%') {
-    if (s21_match("\t \n", Specif.buff[k]) || Specif.Specif == '%') {
+  while ((Specif.buff[k] != '\0' && input[i] != '\0') || Specif.Specif == '%' || Specif.Specif == '\n') {
+    if (s21_match("\t \n", Specif.buff[k]) || Specif.Specif == '%' || Specif.Specif == '\n') {
       while (input[i] != '\0' && s21_match("\t \n", input[i])) {
         i++;
       }
@@ -744,11 +751,12 @@ j = 0;
       while (Specif.buff[k] != '\0' && s21_match("\t \n", Specif.buff[k])) {
         k++;
       }
-      if ((Specif.buff[k] == input[i] && Specif.buff[k] != '\0') || (Specif.Specif == '%' && input[i] == Specif.Specif)) {
+      if ((Specif.buff[k] == input[i] && Specif.buff[k] != '\0') ||
+       (((Specif.Specif == '%' && input[i] == Specif.Specif) ||  Specif.Specif == '\n'))) {
         i++;
         k++;
        checkBuff = true;
-        if (Specif.Specif == '%') {
+        if (Specif.Specif == '%' ||  Specif.Specif == '\n') {
       while (input[i] != '\0' && s21_match("\t \n", input[i])) {
         i++;
       }
@@ -760,7 +768,7 @@ j = 0;
         }
         break;
       }
-      if (Specif.Specif == '%') {
+      if (Specif.Specif == '%' ||  Specif.Specif == '\n') {
         Specif.Specif = '\0';
         k--;
         k--;
