@@ -145,9 +145,10 @@ returnStr = currentFormatString;
 char formatParsing(char formatStatic[16384], char currentFormatElem[8192],
                    bool *formatLoaded, struct Specificators *Specif, int *checkStartScanf, int *status) {
     getNextFormatElem(formatStatic, currentFormatElem, checkStartScanf);
+    static bool startProg = false;
   if (s21_strcmp(currentFormatElem, OUR_ERROR_) != 0) {
     *formatLoaded = true;
-    if (*currentFormatElem == '*') {
+    if (*currentFormatElem == '*' && startProg) {
       (*Specif).argWidth = 1;
       currentFormatElem++;
     } else if (*currentFormatElem >= '0' && *currentFormatElem <= '9') {
@@ -190,7 +191,6 @@ char formatParsing(char formatStatic[16384], char currentFormatElem[8192],
     } else if (*currentFormatElem != '\0') {
        *status = 0;
        int i = 0;
-       
        (*Specif).Specif = '%';
        (*Specif).Space = ' ';
         while (*currentFormatElem != '%') {
@@ -201,6 +201,7 @@ char formatParsing(char formatStatic[16384], char currentFormatElem[8192],
     }
   }
   currentFormatElem++;
+  startProg = true;
   return *currentFormatElem;
 }
 
@@ -726,6 +727,7 @@ void chopLeft(char input[16384], int howMany, size_t *n_counter, struct Specific
   bool checkBuff = false; 
   size_t length = s21_strlen(input);
   bool startParse = true;
+  static bool startProg = false;
   for (int i = howMany; input[i] != '\0'; i++, j++) {
         if (Specif.Space == ' ') {
      while (input[i] != '\0' && s21_match("\t \n", input[i]) && startParse) {
@@ -741,22 +743,24 @@ void chopLeft(char input[16384], int howMany, size_t *n_counter, struct Specific
 int k = 0;
 int i = 0;
 j = 0;
-  while ((Specif.buff[k] != '\0' && input[i] != '\0') || Specif.Specif == '%' || Specif.Specif == '\n') {
-    if (s21_match("\t \n", Specif.buff[k]) || Specif.Specif == '%' || Specif.Specif == '\n') {
+  while ((Specif.buff[k] != '\0' && input[i] != '\0') || Specif.Specif == '%') {
+    if (s21_match("\t \n", Specif.buff[k]) || Specif.Specif == '%') {
       while (input[i] != '\0' && s21_match("\t \n", input[i])) {
         i++;
       }
-      k++;
+      if (startProg) {
+        k++;
+      }
     } 
       while (Specif.buff[k] != '\0' && s21_match("\t \n", Specif.buff[k])) {
         k++;
       }
       if ((Specif.buff[k] == input[i] && Specif.buff[k] != '\0') ||
-       (((Specif.Specif == '%' && input[i] == Specif.Specif) ||  Specif.Specif == '\n'))) {
+       (((Specif.Specif == '%' && input[i] == Specif.Specif)))) {
         i++;
         k++;
        checkBuff = true;
-        if (Specif.Specif == '%' ||  Specif.Specif == '\n') {
+        if (Specif.Specif == '%') {
       while (input[i] != '\0' && s21_match("\t \n", input[i])) {
         i++;
       }
@@ -768,7 +772,7 @@ j = 0;
         }
         break;
       }
-      if (Specif.Specif == '%' ||  Specif.Specif == '\n') {
+      if (Specif.Specif == '%') {
         Specif.Specif = '\0';
         k--;
         k--;
@@ -787,6 +791,7 @@ j = 0;
   }
    input[j] = '\0';
     }
+    startProg = true;
 }
 
 unsigned long hexToBaseTenLong(char *hexVal) {
